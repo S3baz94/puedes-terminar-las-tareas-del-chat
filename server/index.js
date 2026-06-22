@@ -1116,6 +1116,43 @@ app.put('/api/groups/:id', authenticateToken, (req, res) => {
   });
 });
 
+app.get('/api/devotional-notes/:contentId', authenticateToken, (req, res) => {
+  const { contentId } = req.params;
+  const userId = req.user.uid;
+
+  const note = db.prepare('SELECT * FROM devotional_notes WHERE userId = ? AND contentId = ?').get(userId, contentId);
+  return res.json({
+    success: true,
+    noteText: note ? note.noteText : '',
+  });
+});
+
+app.post('/api/devotional-notes/:contentId', authenticateToken, (req, res) => {
+  const { contentId } = req.params;
+  const { noteText } = req.body;
+  const userId = req.user.uid;
+
+  if (noteText === undefined) {
+    return res.status(400).json({ success: false, error: 'noteText es requerido' });
+  }
+
+  const id = 'note-' + Date.now();
+  const updatedAt = new Date().toISOString();
+
+  db.prepare(`
+    INSERT INTO devotional_notes (id, userId, contentId, noteText, updatedAt)
+    VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(userId, contentId) DO UPDATE SET
+      noteText = excluded.noteText,
+      updatedAt = excluded.updatedAt
+  `).run(id, userId, contentId, noteText, updatedAt);
+
+  return res.json({
+    success: true,
+    noteText,
+  });
+});
+
 // Local listener
 if (!process.env.VERCEL) {
   const PORT = process.env.PORT || 3001;

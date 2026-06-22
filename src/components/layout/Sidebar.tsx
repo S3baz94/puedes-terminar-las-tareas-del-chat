@@ -56,10 +56,12 @@ function getIcon(icon: string) {
   return iconMap[icon as keyof typeof iconMap] ?? LayoutDashboard;
 }
 
-function groupByRole(items: NavItem[], role: Role) {
+function groupByCategory(items: NavItem[], role: Role) {
+  const filtered = items.filter((item) => item.roles.includes(role));
   return {
-    principal: items.filter((item) => item.roles.includes(role) && !item.to.startsWith('/shared')),
-    compartido: items.filter((item) => item.roles.includes(role) && item.to.startsWith('/shared')),
+    general: filtered.filter((item) => item.category === 'general'),
+    crecimiento: filtered.filter((item) => item.category === 'crecimiento'),
+    gestion: filtered.filter((item) => item.category === 'gestion'),
   };
 }
 
@@ -70,7 +72,7 @@ export function Sidebar() {
 
   if (!user) return null;
 
-  const grouped = groupByRole(allNavItems, user.role);
+  const grouped = groupByCategory(allNavItems, user.role);
 
   return (
     <>
@@ -102,8 +104,9 @@ export function Sidebar() {
         </div>
 
         <nav className="scrollbar-soft flex-1 space-y-7 overflow-y-auto px-4 py-5">
-          <NavSection items={grouped.principal} label={roleLabels[user.role]} onNavigate={closeSidebar} />
-          <NavSection items={grouped.compartido} label="Compartido" onNavigate={closeSidebar} />
+          <NavSection items={grouped.general} label="General" onNavigate={closeSidebar} />
+          <NavSection items={grouped.crecimiento} label="Vida Espiritual" onNavigate={closeSidebar} />
+          <NavSection items={grouped.gestion} label="Gestión y Ministerio" onNavigate={closeSidebar} />
         </nav>
       </aside>
     </>

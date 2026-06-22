@@ -62,6 +62,7 @@ interface AppState {
   notifications: AppNotification[];
   organizationName: string;
   themeColor: string;
+  devotionalNotes: Record<string, string>;
 
   // Actions
   bootstrap: () => Promise<void>;
@@ -94,6 +95,8 @@ interface AppState {
   deleteEvent: (eventId: string) => Promise<void>;
   updateEventItem: (eventId: string, updates: Partial<Event>) => Promise<void>;
   updateGroupDetails: (groupId: string, updates: Partial<Group>) => Promise<void>;
+  fetchDevotionalNote: (contentId: string) => Promise<void>;
+  saveDevotionalNote: (contentId: string, noteText: string) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()(
@@ -111,6 +114,7 @@ export const useAppStore = create<AppState>()(
       notifications: mockNotifications,
       organizationName: 'Los Invisibles de Jesus',
       themeColor: '#4F46E5',
+      devotionalNotes: {},
 
       async bootstrap() {
         const token = useAuthStore.getState().token;
@@ -563,6 +567,37 @@ export const useAppStore = create<AppState>()(
           if (data.success && data.group) {
             set((state) => ({
               groups: state.groups.map((g) => (g.id === groupId ? data.group : g)),
+            }));
+          }
+        }
+      },
+      async fetchDevotionalNote(contentId) {
+        const res = await apiFetch(`/api/devotional-notes/${contentId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            set((state) => ({
+              devotionalNotes: {
+                ...state.devotionalNotes,
+                [contentId]: data.noteText || '',
+              },
+            }));
+          }
+        }
+      },
+      async saveDevotionalNote(contentId, noteText) {
+        const res = await apiFetch(`/api/devotional-notes/${contentId}`, {
+          method: 'POST',
+          body: JSON.stringify({ noteText }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            set((state) => ({
+              devotionalNotes: {
+                ...state.devotionalNotes,
+                [contentId]: noteText,
+              },
             }));
           }
         }

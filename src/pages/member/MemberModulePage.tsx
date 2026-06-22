@@ -28,6 +28,38 @@ const predefinedAvatars = [
   "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&h=150&q=80",
 ];
 
+const BIBLE_BOOKS = {
+  Mateo: {
+    '6': [
+      { num: 33, text: 'Mas buscad primeramente el reino de Dios y su justicia, y todas estas cosas os serán añadidas.' },
+      { num: 34, text: 'Así que, no os afanéis por el día de mañana, porque el día de mañana traerá su afán; basta a cada día su propio mal.' },
+      { num: 35, text: 'Ninguno puede servir a dos señores; porque o aborrecerá al uno y amará al otro, o estimará al uno y menospreciará al otro.' }
+    ]
+  },
+  Salmos: {
+    '23': [
+      { num: 1, text: 'Jehová es mi pastor; nada me faltará.' },
+      { num: 2, text: 'En lugares de delicados pastos me hará descansar; Junto a aguas de reposo me pastoreará.' },
+      { num: 3, text: 'Confortará mi alma; Me guiará por sendas de justicia por amor de su nombre.' },
+      { num: 4, text: 'Aunque ande en valle de sombra de muerte, no temeré mal alguno, porque tú estarás conmigo.' }
+    ]
+  },
+  Juan: {
+    '3': [
+      { num: 16, text: 'Porque de tal manera amó Dios al mundo, que ha dado a su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna.' },
+      { num: 17, text: 'Porque no envió Dios a su Hijo al mundo para condenar al mundo, sino para que el mundo sea salvo por él.' },
+      { num: 18, text: 'El que en él cree, no es condenado; pero el que no cree, ya ha sido condenado, porque no ha creído en el nombre del unigénito.' }
+    ]
+  },
+  Génesis: {
+    '1': [
+      { num: 1, text: 'En el principio creó Dios los cielos y la tierra.' },
+      { num: 2, text: 'Y la tierra estaba desordenada y vacía, y las tinieblas estaban sobre la faz del abismo, y el Espíritu de Dios se movía.' },
+      { num: 3, text: 'Y dijo Dios: Sea la luz; y fue la luz.' }
+    ]
+  }
+} as const;
+
 export type MemberModule = 'biblia' | 'devocional' | 'oracion' | 'grupos' | 'en-vivo' | 'dar' | 'perfil';
 
 const moduleTitles: Record<MemberModule, string> = {
@@ -51,6 +83,7 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
   const groups = useAppStore((state) => state.groups);
   const liveStream = useAppStore((state) => state.liveStream);
   const users = useAppStore((state) => state.users);
+  const devotionalNotes = useAppStore((state) => state.devotionalNotes);
 
   // Zustand actions
   const addDonation = useAppStore((state) => state.addDonation);
@@ -58,6 +91,8 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
   const incrementPrayerCount = useAppStore((state) => state.incrementPrayerCount);
   const toggleRSVP = useAppStore((state) => state.toggleRSVP);
   const updateUserProfile = useAppStore((state) => state.updateUserProfile);
+  const fetchDevotionalNote = useAppStore((state) => state.fetchDevotionalNote);
+  const saveDevotionalNote = useAppStore((state) => state.saveDevotionalNote);
 
   // Component state
   const [amount, setAmount] = useState('80000');
@@ -67,6 +102,15 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
 
   // Bible state
   const [bibleSearchQuery, setBibleSearchQuery] = useState('');
+  const [selectedBook, setSelectedBook] = useState<'Mateo' | 'Salmos' | 'Juan' | 'Génesis'>('Mateo');
+  const [selectedChapter, setSelectedChapter] = useState<'6' | '23' | '3' | '1'>('6');
+
+  // Devotional Note state
+  const devotionals = useMemo(() => content.filter((item) => item.type === 'devotional'), [content]);
+  const [selectedDevoId, setSelectedDevoId] = useState(devotionals[0]?.id || '');
+  const selectedDevotional = devotionals.find((d) => d.id === selectedDevoId) || devotionals[0];
+  const [devoNoteText, setDevoNoteText] = useState('');
+  const [saveNoteStatus, setSaveNoteStatus] = useState<string | null>(null);
 
   // Prayer state
   const [prayerTitle, setPrayerTitle] = useState('');
@@ -122,6 +166,19 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
       setLeaderId(user.leaderId || '');
     }
   }, [user]);
+
+  // Sync devotional note when selection or notes store updates
+  useEffect(() => {
+    if (selectedDevotional) {
+      fetchDevotionalNote(selectedDevotional.id);
+    }
+  }, [selectedDevotional?.id, fetchDevotionalNote]);
+
+  useEffect(() => {
+    if (selectedDevotional) {
+      setDevoNoteText(devotionalNotes[selectedDevotional.id] || '');
+    }
+  }, [selectedDevotional?.id, devotionalNotes]);
 
   async function submitDonation(event: FormEvent) {
     event.preventDefault();
@@ -221,7 +278,20 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
   }
 
   function handlePlayAudio() {
-    alert('Reproduciendo audio del capítulo Mateo 6 en versión RVR60 (simulado)... 🔊');
+    alert(`Reproduciendo audio de ${selectedBook} ${selectedChapter} en versión RVR60 (simulado)... 🔊`);
+  }
+
+  async function handleSaveDevoNote() {
+    if (!selectedDevotional) return;
+    setSaveNoteStatus('Guardando...');
+    try {
+      await saveDevotionalNote(selectedDevotional.id, devoNoteText);
+      setSaveNoteStatus('¡Reflexión guardada con éxito!');
+      setTimeout(() => setSaveNoteStatus(null), 3000);
+    } catch (err) {
+      setSaveNoteStatus('Error al guardar.');
+      setTimeout(() => setSaveNoteStatus(null), 3000);
+    }
   }
 
   function handleDownloadReceipt(fundName: string, donationAmount: number) {
@@ -237,32 +307,55 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
           <Card
             action={<Button icon={<Search className="h-4 w-4" />} variant="outline" onClick={() => alert(`Búsqueda para "${bibleSearchQuery}" completada (simulado).`)}>Buscar</Button>}
             eyebrow="RVR60"
-            title="Mateo 6"
+            title={`${selectedBook} ${selectedChapter}`}
           >
             <div className="space-y-4 text-base leading-8 text-ink">
-              {[
-                { num: 33, text: 'Mas buscad primeramente el reino de Dios y su justicia.' },
-                { num: 34, text: 'Asi que, no os afaneis por el dia de manana.' },
-                { num: 35, text: 'Porque el dia de manana traera su afan.' },
-              ]
-                .filter((v) => v.text.toLowerCase().includes(bibleSearchQuery.toLowerCase()))
-                .map((verse) => (
-                  <p className="rounded-lg border border-slate-200 bg-slate-50 p-4" key={verse.text}>
+              {(((BIBLE_BOOKS as any)[selectedBook] as any)[selectedChapter] || [])
+                .filter((verse: any) => verse.text.toLowerCase().includes(bibleSearchQuery.toLowerCase()))
+                .map((verse: any) => (
+                  <p className="rounded-lg border border-slate-200 bg-slate-50 p-4 animate-fade-in" key={verse.text}>
                     <span className="mr-2 font-extrabold text-primary">{verse.num}</span>
                     {verse.text}
                   </p>
                 ))}
-              {bibleSearchQuery && [
-                { num: 33, text: 'Mas buscad primeramente el reino de Dios y su justicia.' },
-                { num: 34, text: 'Asi que, no os afaneis por el dia de manana.' },
-                { num: 35, text: 'Porque el dia de manana traera su afan.' },
-              ].filter((v) => v.text.toLowerCase().includes(bibleSearchQuery.toLowerCase())).length === 0 ? (
+              {bibleSearchQuery && (((BIBLE_BOOKS as any)[selectedBook] as any)[selectedChapter] || []).filter((verse: any) => verse.text.toLowerCase().includes(bibleSearchQuery.toLowerCase())).length === 0 ? (
                 <p className="text-center text-sm text-muted py-4">No se encontraron versículos coincidentes.</p>
               ) : null}
             </div>
           </Card>
           <Card eyebrow="Herramientas" title="Notas y plan">
             <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-ink">Libro</span>
+                  <select
+                    className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm shadow-panel"
+                    value={selectedBook}
+                    onChange={(e) => {
+                      const book = e.currentTarget.value as any;
+                      setSelectedBook(book);
+                      const chapters = Object.keys((BIBLE_BOOKS as any)[book]);
+                      setSelectedChapter(chapters[0] as any);
+                    }}
+                  >
+                    {Object.keys(BIBLE_BOOKS).map((b) => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-ink">Capítulo</span>
+                  <select
+                    className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm shadow-panel"
+                    value={selectedChapter}
+                    onChange={(e) => setSelectedChapter(e.currentTarget.value as any)}
+                  >
+                    {Object.keys((BIBLE_BOOKS as any)[selectedBook]).map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
               <Input
                 label="Buscar texto"
                 placeholder="Reino de Dios"
@@ -295,9 +388,9 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
 
       {module === 'devocional' ? (
         <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
-          <Card eyebrow={content[0]?.bibleReference} title={content[0]?.title}>
-            <p className="text-xl font-semibold leading-9 text-ink">{content[0]?.body}</p>
-            <p className="mt-4 text-sm leading-6 text-muted">{content[0]?.excerpt}</p>
+          <Card eyebrow={selectedDevotional?.bibleReference} title={selectedDevotional?.title}>
+            <p className="text-xl font-semibold leading-9 text-ink">{selectedDevotional?.body}</p>
+            <p className="mt-4 text-sm leading-6 text-muted">{selectedDevotional?.excerpt}</p>
             <div className="mt-6 flex flex-wrap gap-2">
               <Button icon={<Heart className="h-4 w-4" />} variant="outline" onClick={handleFavorite}>
                 Favorito
@@ -307,16 +400,39 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
               </Button>
             </div>
           </Card>
-          <Card eyebrow="Archivo" title="Historial">
-            <div className="space-y-3">
-              {content.map((item) => (
-                <div className="rounded-lg border border-slate-200 p-4" key={item.id}>
-                  <p className="font-bold text-ink">{item.title}</p>
-                  <p className="mt-1 text-sm text-muted">{item.excerpt}</p>
-                </div>
-              ))}
-            </div>
-          </Card>
+
+          <div className="space-y-6">
+            <Card eyebrow="Mi Crecimiento" title="Diario de Reflexión">
+              <div className="space-y-4">
+                <p className="text-xs text-muted">Anota tus reflexiones y lo que Dios te ha hablado hoy a través de este devocional.</p>
+                <textarea
+                  className="min-h-36 w-full rounded-lg border border-slate-200 p-3 text-sm shadow-panel focus:border-primary focus:ring-1 focus:ring-primary"
+                  placeholder="Escribe tus notas aquí..."
+                  value={devoNoteText}
+                  onChange={(e) => setDevoNoteText(e.target.value)}
+                />
+                {saveNoteStatus && <p className="text-sm font-semibold text-green-600 animate-fade-in">{saveNoteStatus}</p>}
+                <Button className="w-full" onClick={handleSaveDevoNote}>Guardar en mi Diario</Button>
+              </div>
+            </Card>
+
+            <Card eyebrow="Archivo" title="Otros Devocionales">
+              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                {devotionals.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setSelectedDevoId(item.id)}
+                    className={`w-full text-left rounded-lg border p-4 transition ${
+                      selectedDevotional?.id === item.id ? 'border-primary bg-indigo-50/40' : 'border-slate-200 hover:border-primary'
+                    }`}
+                  >
+                    <p className="font-bold text-ink">{item.title}</p>
+                    <p className="mt-1 text-xs text-muted">{item.bibleReference}</p>
+                  </button>
+                ))}
+              </div>
+            </Card>
+          </div>
         </div>
       ) : null}
 

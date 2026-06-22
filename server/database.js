@@ -244,6 +244,15 @@ export function initializeDatabase() {
           label TEXT PRIMARY KEY,
           progress INTEGER NOT NULL
       );
+
+      CREATE TABLE IF NOT EXISTS devotional_notes (
+          id TEXT PRIMARY KEY,
+          userId TEXT REFERENCES users(uid) ON DELETE CASCADE,
+          contentId TEXT REFERENCES content(id) ON DELETE CASCADE,
+          noteText TEXT NOT NULL,
+          updatedAt TEXT NOT NULL,
+          UNIQUE(userId, contentId)
+      );
     `);
 
     // 2. Check if users table is empty to perform seeding
