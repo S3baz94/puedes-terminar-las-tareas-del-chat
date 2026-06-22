@@ -1,0 +1,10 @@
+PASOS PARA SUBIR LA PAGINA A NETLIFY
+
+1. Entra a https://www.netlify.com/
+2. Crea cuenta o inicia sesion.
+3. Busca "Add new site" o "Deploy manually".
+4. Sube el archivo subir-a-netlify-corregido.zip.
+5. Netlify te dara un link publico de la pagina.
+
+Archivo que debes subir:
+subir-a-netlify-corregido.zip

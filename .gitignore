@@ -1,0 +1,10 @@
+node_modules
+dist
+.npm-cache
+.vite-cache
+.env
+.vercel
+*.local
+*.tsbuildinfo
+
+.vercel
