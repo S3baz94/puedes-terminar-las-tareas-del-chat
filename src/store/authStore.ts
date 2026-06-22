@@ -8,6 +8,7 @@ type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'error';
 
 interface AuthState {
   user: User | null;
+  token: string | null;
   status: AuthStatus;
   error: string | null;
   login: (email: string, password: string) => Promise<boolean>;
@@ -17,64 +18,77 @@ interface AuthState {
     favoriteVerse: string;
     testimony: string;
     privacySettings: PrivacySettings;
-  }) => void;
+  }) => Promise<boolean>;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
+      token: null,
       status: 'idle',
       error: null,
       async login(email, password) {
         set({ status: 'loading', error: null });
-        await new Promise((resolve) => window.setTimeout(resolve, 380));
-
-        const credential = demoCredentials.find(
-          (item) =>
-            item.email.toLowerCase() === email.trim().toLowerCase() &&
-            item.password === password,
-        );
-
-        const users = useAppStore.getState().users;
-        const user = credential
-          ? users.find((candidate) => candidate.email === credential.email) ?? null
-          : null;
-
-        if (!user) {
-          set({ status: 'error', error: 'Credenciales invalidas' });
+        try {
+          const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            set({
+              user: data.user,
+              token: data.token,
+              status: 'authenticated',
+              error: null,
+            });
+            await useAppStore.getState().bootstrap();
+            return true;
+          } else {
+            set({ status: 'error', error: data.error || 'Credenciales invalidas' });
+            return false;
+          }
+        } catch (err: any) {
+          set({ status: 'error', error: err.message || 'Error de conexion' });
           return false;
         }
-
-        set({ user, status: 'authenticated', error: null });
-        return true;
       },
       logout() {
-        set({ user: null, status: 'idle', error: null });
+        set({ user: null, token: null, status: 'idle', error: null });
+        useAppStore.getState().reset();
       },
-      completeOnboarding(details) {
-        set((state) => {
-          if (!state.user) return { user: null };
-          
-          const updatedUser: User = {
-            ...state.user,
-            ...details,
-            onboardingCompleted: true,
-          };
-          
-          // Sync to appStore
-          useAppStore.getState().updateUserProfile(state.user.uid, {
-            ...details,
-            onboardingCompleted: true,
+      async completeOnboarding(details) {
+        const token = useAuthStore.getState().token;
+        if (!token) return false;
+        try {
+          const res = await fetch('/api/auth/onboarding', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify(details),
           });
-
-          return { user: updatedUser };
-        });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            set({ user: data.user });
+            useAppStore.getState().updateUserProfile(data.user.uid, data.user);
+            return true;
+          }
+          return false;
+        } catch (err) {
+          console.error(err);
+          return false;
+        }
       },
     }),
     {
       name: 'congregacion-digital-auth',
-      partialize: (state) => ({ user: state.user }),
+      partialize: (state) => ({ user: state.user, token: state.token }),
     },
   ),
 );

@@ -26,6 +26,29 @@ import type {
   AppNotification,
 } from '../types/models';
 
+const getAuthHeaders = () => {
+  const token = useAuthStore.getState().token;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+};
+
+const apiFetch = async (url: string, options: RequestInit = {}) => {
+  const headers = getAuthHeaders();
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      ...headers,
+      ...options.headers,
+    },
+  });
+  if (res.status === 401 || res.status === 403) {
+    useAuthStore.getState().logout();
+  }
+  return res;
+};
+
 interface AppState {
   users: User[];
   groups: Group[];
@@ -38,27 +61,31 @@ interface AppState {
   liveStream: LiveStream;
   notifications: AppNotification[];
   organizationName: string;
-
   themeColor: string;
 
   // Actions
-  updateUserProfile: (userId: string, updates: Partial<User>) => void;
-  approveUser: (userId: string) => void;
-  addDonation: (donation: Omit<Donation, 'id' | 'createdAt' | 'status'>) => void;
-  addPrayerRequest: (request: Omit<PrayerRequest, 'id' | 'createdAt' | 'prayerCount' | 'prayedByIds' | 'status'>) => void;
-  incrementPrayerCount: (prayerId: string, userId: string) => void;
-  updatePrayerPastoralNote: (prayerId: string, note: string) => void;
-  resolvePrayerRequest: (prayerId: string) => void;
-  addPastoralNote: (note: Omit<PastoralNote, 'id' | 'createdAt'>) => void;
-  addContent: (item: Omit<Content, 'id' | 'createdAt' | 'viewCount'>) => void;
-  addEvent: (item: Omit<Event, 'id' | 'createdAt' | 'attendeeIds' | 'reminderSent'>) => void;
-  toggleRSVP: (eventId: string, userId: string) => void;
-  toggleAttendance: (eventId: string, userId: string) => void;
-  addMessage: (conversationId: string, senderId: string, content: string) => void;
-  updateLiveStreamSettings: (updates: Partial<LiveStream>) => void;
-  updateOrganizationName: (name: string) => void;
-  updateThemeColor: (color: string) => void;
-  registerUser: (newUser: Omit<User, 'uid' | 'role' | 'status' | 'onboardingCompleted' | 'lastActiveAt' | 'createdAt' | 'privacySettings' | 'ministry' | 'groupIds'>) => void;
+  bootstrap: () => Promise<void>;
+  reset: () => void;
+  updateUserProfile: (userId: string, updates: Partial<User>) => Promise<void>;
+  approveUser: (userId: string) => Promise<void>;
+  addDonation: (donation: Omit<Donation, 'id' | 'createdAt' | 'status'>) => Promise<void>;
+  addPrayerRequest: (request: Omit<PrayerRequest, 'id' | 'createdAt' | 'prayerCount' | 'prayedByIds' | 'status'>) => Promise<void>;
+  incrementPrayerCount: (prayerId: string, userId: string) => Promise<void>;
+  updatePrayerPastoralNote: (prayerId: string, note: string) => Promise<void>;
+  resolvePrayerRequest: (prayerId: string) => Promise<void>;
+  addPastoralNote: (note: Omit<PastoralNote, 'id' | 'createdAt'>) => Promise<void>;
+  addContent: (item: Omit<Content, 'id' | 'createdAt' | 'viewCount'>) => Promise<void>;
+  addEvent: (item: Omit<Event, 'id' | 'createdAt' | 'attendeeIds' | 'reminderSent'>) => Promise<void>;
+  toggleRSVP: (eventId: string, userId: string) => Promise<void>;
+  toggleAttendance: (eventId: string, userId: string) => Promise<void>;
+  addMessage: (conversationId: string, senderId: string, content: string) => Promise<void>;
+  updateLiveStreamSettings: (updates: Partial<LiveStream>) => Promise<void>;
+  updateOrganizationName: (name: string) => Promise<void>;
+  updateThemeColor: (color: string) => Promise<void>;
+  registerUser: (
+    newUser: Omit<User, 'uid' | 'role' | 'status' | 'onboardingCompleted' | 'lastActiveAt' | 'createdAt' | 'privacySettings' | 'ministry' | 'groupIds'> & { password?: string },
+    password?: string
+  ) => Promise<boolean>;
 }
 
 export const useAppStore = create<AppState>()(
@@ -77,203 +104,331 @@ export const useAppStore = create<AppState>()(
       organizationName: 'Los Invisibles de Jesus',
       themeColor: '#4F46E5',
 
-      updateUserProfile(userId, updates) {
-        set((state) => {
-          const updatedUsers = state.users.map((u) => (u.uid === userId ? { ...u, ...updates } : u));
-          
-          const currentUser = useAuthStore.getState().user;
-          if (currentUser && currentUser.uid === userId) {
-            useAuthStore.setState({
-              user: { ...currentUser, ...updates }
-            });
-          }
-
-          return { users: updatedUsers };
-        });
-      },
-      approveUser(userId) {
-        set((state) => {
-          const updatedUsers = state.users.map((u) => (u.uid === userId ? { ...u, status: 'active' as const } : u));
-          
-          const currentUser = useAuthStore.getState().user;
-          if (currentUser && currentUser.uid === userId) {
-            useAuthStore.setState({
-              user: { ...currentUser, status: 'active' }
-            });
-          }
-
-          return { users: updatedUsers };
-        });
-      },
-      toggleAttendance(eventId, userId) {
-        set((state) => ({
-          events: state.events.map((e) => {
-            if (e.id === eventId) {
-              const isPresent = e.attendeeIds.includes(userId);
-              return {
-                ...e,
-                attendeeIds: isPresent
-                  ? e.attendeeIds.filter((id) => id !== userId)
-                  : [...e.attendeeIds, userId],
-              };
-            }
-            return e;
-          }),
-        }));
-      },
-      addDonation(donation) {
-        const newDonation: Donation = {
-          ...donation,
-          id: `d-${Date.now()}`,
-          status: 'completed',
-          createdAt: new Date().toISOString(),
-        };
-        set((state) => ({
-          donations: [newDonation, ...state.donations],
-        }));
-      },
-      addPrayerRequest(request) {
-        const newRequest: PrayerRequest = {
-          ...request,
-          id: `p-${Date.now()}`,
-          status: 'active',
-          prayerCount: 0,
-          prayedByIds: [],
-          createdAt: new Date().toISOString(),
-        };
-        set((state) => ({
-          prayerRequests: [newRequest, ...state.prayerRequests],
-        }));
-      },
-      incrementPrayerCount(prayerId, userId) {
-        set((state) => ({
-          prayerRequests: state.prayerRequests.map((p) => {
-            if (p.id === prayerId) {
-              const alreadyPrayed = p.prayedByIds.includes(userId);
-              const prayedByIds = alreadyPrayed
-                ? p.prayedByIds.filter((id) => id !== userId)
-                : [...p.prayedByIds, userId];
-              return {
-                ...p,
-                prayerCount: p.prayerCount + (alreadyPrayed ? -1 : 1),
-                prayedByIds,
-              };
-            }
-            return p;
-          }),
-        }));
-      },
-      updatePrayerPastoralNote(prayerId, note) {
-        set((state) => ({
-          prayerRequests: state.prayerRequests.map((p) =>
-            p.id === prayerId ? { ...p, pastoralNote: note } : p,
-          ),
-        }));
-      },
-      resolvePrayerRequest(prayerId) {
-        set((state) => ({
-          prayerRequests: state.prayerRequests.map((p) =>
-            p.id === prayerId ? { ...p, status: 'answered', answeredAt: new Date().toISOString() } : p,
-          ),
-        }));
-      },
-      addPastoralNote(note) {
-        const newNote: PastoralNote = {
-          ...note,
-          id: `n-${Date.now()}`,
-          createdAt: new Date().toISOString(),
-        };
-        set((state) => ({
-          pastoralNotes: [newNote, ...state.pastoralNotes],
-        }));
-      },
-      addContent(item) {
-        const newContent: Content = {
-          ...item,
-          id: `c-${Date.now()}`,
-          viewCount: 0,
-          createdAt: new Date().toISOString(),
-        };
-        set((state) => ({
-          content: [newContent, ...state.content],
-        }));
-      },
-      addEvent(item) {
-        const newEvent: Event = {
-          ...item,
-          id: `e-${Date.now()}`,
-          attendeeIds: [],
-          reminderSent: false,
-          createdAt: new Date().toISOString(),
-        };
-        set((state) => ({
-          events: [newEvent, ...state.events],
-        }));
-      },
-      toggleRSVP(eventId, userId) {
-        set((state) => ({
-          events: state.events.map((e) => {
-            if (e.id === eventId) {
-              const registered = e.attendeeIds.includes(userId);
-              return {
-                ...e,
-                attendeeIds: registered
-                  ? e.attendeeIds.filter((id) => id !== userId)
-                  : [...e.attendeeIds, userId],
-              };
-            }
-            return e;
-          }),
-        }));
-      },
-      addMessage(conversationId, senderId, content) {
-        const newMessage: Message = {
-          id: `m-${Date.now()}`,
-          conversationId,
-          senderId,
-          content,
-          type: 'text',
-          readBy: [],
-          isPinned: false,
-          createdAt: new Date().toISOString(),
-        };
-        set((state) => ({
-          messages: [...state.messages, newMessage],
-        }));
-      },
-      updateLiveStreamSettings(updates) {
-        set((state) => ({
-          liveStream: { ...state.liveStream, ...updates },
-        }));
-      },
-      updateOrganizationName(name) {
-        set({ organizationName: name });
-      },
-      updateThemeColor(color) {
-        set({ themeColor: color });
-      },
-      registerUser(newUser) {
-        set((state) => {
-          const registeredUser: User = {
-            ...newUser,
-            uid: `u-${Date.now()}`,
-            role: 'member',
-            status: 'pending',
-            onboardingCompleted: false,
-            privacySettings: {
-              showPhone: false,
-              showEmail: true,
-              showCity: true,
+      async bootstrap() {
+        const token = useAuthStore.getState().token;
+        if (!token) return;
+        try {
+          const res = await fetch('/api/bootstrap', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
             },
-            ministry: [],
-            groupIds: [],
-            createdAt: new Date().toISOString(),
-            lastActiveAt: new Date().toISOString(),
-          };
-          return {
-            users: [...state.users, registeredUser],
-          };
+          });
+          if (res.status === 401 || res.status === 403) {
+            useAuthStore.getState().logout();
+            return;
+          }
+          if (res.ok) {
+            const data = await res.json();
+            set({
+              users: data.users || [],
+              groups: data.groups || [],
+              content: data.content || [],
+              prayerRequests: data.prayerRequests || [],
+              events: data.events || [],
+              pastoralNotes: data.pastoralNotes || [],
+              donations: data.donations || [],
+              messages: data.messages || [],
+              liveStream: data.liveStream || {
+                id: '',
+                title: '',
+                platform: 'youtube',
+                streamUrl: '',
+                chatEnabled: false,
+                offeringEnabled: false,
+                status: 'scheduled',
+                viewerCount: 0,
+                scheduledAt: '',
+                createdAt: '',
+              },
+              notifications: data.notifications || [],
+              organizationName: data.organizationName || 'Los Invisibles de Jesus',
+              themeColor: data.themeColor || '#4F46E5',
+            });
+          }
+        } catch (err) {
+          console.error('Error during bootstrap:', err);
+        }
+      },
+      reset() {
+        set({
+          users: [],
+          groups: [],
+          content: [],
+          prayerRequests: [],
+          events: [],
+          pastoralNotes: [],
+          donations: [],
+          messages: [],
+          liveStream: {
+            id: '',
+            title: '',
+            platform: 'youtube',
+            streamUrl: '',
+            chatEnabled: false,
+            offeringEnabled: false,
+            status: 'scheduled',
+            viewerCount: 0,
+            scheduledAt: '',
+            createdAt: '',
+          },
+          notifications: [],
+          organizationName: 'Los Invisibles de Jesus',
+          themeColor: '#4F46E5',
         });
+      },
+      async updateUserProfile(userId, updates) {
+        const res = await apiFetch(`/api/users/${userId}`, {
+          method: 'PUT',
+          body: JSON.stringify(updates),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.user) {
+            set((state) => {
+              const updatedUsers = state.users.map((u) => (u.uid === userId ? data.user : u));
+              const currentUser = useAuthStore.getState().user;
+              if (currentUser && currentUser.uid === userId) {
+                useAuthStore.setState({ user: data.user });
+              }
+              return { users: updatedUsers };
+            });
+          }
+        }
+      },
+      async approveUser(userId) {
+        const res = await apiFetch(`/api/users/${userId}/approve`, {
+          method: 'POST',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            set((state) => {
+              const updatedUsers = state.users.map((u) => (u.uid === userId ? { ...u, status: 'active' as const } : u));
+              const currentUser = useAuthStore.getState().user;
+              if (currentUser && currentUser.uid === userId) {
+                useAuthStore.setState({
+                  user: { ...currentUser, status: 'active' }
+                });
+              }
+              return { users: updatedUsers };
+            });
+          }
+        }
+      },
+      async toggleAttendance(eventId, userId) {
+        const res = await apiFetch(`/api/events/${eventId}/attendance`, {
+          method: 'POST',
+          body: JSON.stringify({ userId }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.event) {
+            set((state) => ({
+              events: state.events.map((e) => (e.id === eventId ? data.event : e)),
+            }));
+          }
+        }
+      },
+      async addDonation(donation) {
+        const res = await apiFetch('/api/donations', {
+          method: 'POST',
+          body: JSON.stringify(donation),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.donation) {
+            set((state) => ({
+              donations: [data.donation, ...state.donations],
+            }));
+          }
+        }
+      },
+      async addPrayerRequest(request) {
+        const res = await apiFetch('/api/prayer-requests', {
+          method: 'POST',
+          body: JSON.stringify(request),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.prayerRequest) {
+            set((state) => ({
+              prayerRequests: [data.prayerRequest, ...state.prayerRequests],
+            }));
+          }
+        }
+      },
+      async incrementPrayerCount(prayerId, userId) {
+        const res = await apiFetch(`/api/prayer-requests/${prayerId}/pray`, {
+          method: 'POST',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.prayerRequest) {
+            set((state) => ({
+              prayerRequests: state.prayerRequests.map((p) =>
+                p.id === prayerId ? data.prayerRequest : p
+              ),
+            }));
+          }
+        }
+      },
+      async updatePrayerPastoralNote(prayerId, note) {
+        const res = await apiFetch(`/api/prayer-requests/${prayerId}/pastoral-note`, {
+          method: 'PUT',
+          body: JSON.stringify({ pastoralNote: note }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.prayerRequest) {
+            set((state) => ({
+              prayerRequests: state.prayerRequests.map((p) =>
+                p.id === prayerId ? data.prayerRequest : p
+              ),
+            }));
+          }
+        }
+      },
+      async resolvePrayerRequest(prayerId) {
+        const res = await apiFetch(`/api/prayer-requests/${prayerId}/resolve`, {
+          method: 'POST',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.prayerRequest) {
+            set((state) => ({
+              prayerRequests: state.prayerRequests.map((p) =>
+                p.id === prayerId ? data.prayerRequest : p
+              ),
+            }));
+          }
+        }
+      },
+      async addPastoralNote(note) {
+        const res = await apiFetch('/api/pastoral-notes', {
+          method: 'POST',
+          body: JSON.stringify(note),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.pastoralNote) {
+            set((state) => ({
+              pastoralNotes: [data.pastoralNote, ...state.pastoralNotes],
+            }));
+          }
+        }
+      },
+      async addContent(item) {
+        const res = await apiFetch('/api/content', {
+          method: 'POST',
+          body: JSON.stringify(item),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.content) {
+            set((state) => ({
+              content: [data.content, ...state.content],
+            }));
+          }
+        }
+      },
+      async addEvent(item) {
+        const res = await apiFetch('/api/events', {
+          method: 'POST',
+          body: JSON.stringify(item),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.event) {
+            set((state) => ({
+              events: [data.event, ...state.events],
+            }));
+          }
+        }
+      },
+      async toggleRSVP(eventId, userId) {
+        const res = await apiFetch(`/api/events/${eventId}/rsvp`, {
+          method: 'POST',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.event) {
+            set((state) => ({
+              events: state.events.map((e) => (e.id === eventId ? data.event : e)),
+            }));
+          }
+        }
+      },
+      async addMessage(conversationId, senderId, content) {
+        const res = await apiFetch('/api/messages', {
+          method: 'POST',
+          body: JSON.stringify({ conversationId, content, type: 'text' }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.message) {
+            set((state) => ({
+              messages: [...state.messages, data.message],
+            }));
+          }
+        }
+      },
+      async updateLiveStreamSettings(updates) {
+        const res = await apiFetch('/api/livestream', {
+          method: 'PUT',
+          body: JSON.stringify(updates),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.liveStream) {
+            set({ liveStream: data.liveStream });
+          }
+        }
+      },
+      async updateOrganizationName(name) {
+        const res = await apiFetch('/api/config', {
+          method: 'PUT',
+          body: JSON.stringify({ organizationName: name }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.organizationName) {
+            set({ organizationName: data.organizationName });
+          }
+        }
+      },
+      async updateThemeColor(color) {
+        const res = await apiFetch('/api/config', {
+          method: 'PUT',
+          body: JSON.stringify({ themeColor: color }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.themeColor) {
+            set({ themeColor: data.themeColor });
+          }
+        }
+      },
+      async registerUser(newUser, passwordParam) {
+        const password = newUser.password || passwordParam;
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: newUser.email,
+            password,
+            displayName: newUser.displayName,
+            city: newUser.city,
+            country: newUser.country || 'Colombia',
+          }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          return true;
+        } else {
+          throw new Error(data.error || 'Error al registrar');
+        }
       },
     }),
     {

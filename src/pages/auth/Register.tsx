@@ -12,28 +12,38 @@ export function Register() {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [city, setCity] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!displayName.trim() || !email.trim() || !city.trim()) {
+    if (!displayName.trim() || !email.trim() || !city.trim() || !password) {
       setError('Por favor rellenar todos los campos.');
       return;
     }
+    if (password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
     setError(null);
-    registerUser({
-      displayName,
-      email,
-      city,
-      country: 'Colombia',
-      phone: '',
-      spiritualStatus: 'new_believer',
-    });
-    setSuccess(true);
-    setTimeout(() => {
-      navigate('/login');
-    }, 3000);
+    try {
+      await registerUser({
+        displayName,
+        email,
+        city,
+        country: 'Colombia',
+        phone: '',
+        spiritualStatus: 'new_believer',
+        password,
+      });
+      setSuccess(true);
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
+    } catch (err: any) {
+      setError(err.message || 'Error al registrar.');
+    }
   }
 
   return (
@@ -62,6 +72,13 @@ export function Register() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+            />
+            <Input
+              label="Password"
+              placeholder="Contraseña (mínimo 6 caracteres)"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             <Input
               label="Ciudad"

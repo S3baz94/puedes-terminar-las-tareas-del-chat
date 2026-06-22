@@ -4,14 +4,23 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --configLoader runner",
+    "dev:frontend": "vite --host 127.0.0.1 --configLoader runner",
+    "dev:backend": "tsx watch server/index.js",
+    "dev": "concurrently -n \"frontend,backend\" -c \"cyan,magenta\" \"npm run dev:frontend\" \"npm run dev:backend\"",
     "build": "tsc -b && vite build --configLoader runner",
     "preview": "vite preview --host 127.0.0.1 --configLoader runner",
-    "typecheck": "tsc -b --pretty"
+    "typecheck": "tsc -b --pretty",
+    "start": "node server/index.js"
   },
   "dependencies": {
     "@stripe/stripe-js": "^4.10.0",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.11.1",
+    "concurrently": "^10.0.3",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "firebase": "^11.1.0",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -19,12 +28,18 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
+    "tsx": "^4.19.3",
     "typescript": "^5.6.3",
     "vite": "^6.0.1"
   }
