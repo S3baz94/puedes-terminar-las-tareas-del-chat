@@ -26,6 +26,7 @@ export const leaderNav: NavItem[] = [
   { label: 'Oracion', to: '/leader/oracion', icon: 'prayer', roles: ['leader'] },
   { label: 'Recursos', to: '/leader/recursos', icon: 'library', roles: ['leader'] },
   { label: 'Reportes', to: '/leader/reportes', icon: 'analytics', roles: ['leader'] },
+  { label: 'Perfil', to: '/leader/perfil', icon: 'profile', roles: ['leader'] },
 ];
 
 export const memberNav: NavItem[] = [

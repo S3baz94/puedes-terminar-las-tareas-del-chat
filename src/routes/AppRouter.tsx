@@ -54,6 +54,7 @@ export function AppRouter() {
               <Route element={<LeaderModulePage module="oracion" />} path="/leader/oracion" />
               <Route element={<LeaderModulePage module="recursos" />} path="/leader/recursos" />
               <Route element={<LeaderModulePage module="reportes" />} path="/leader/reportes" />
+              <Route element={<LeaderModulePage module="perfil" />} path="/leader/perfil" />
             </Route>
 
             <Route element={<RoleRoute roles={['member']} />}>

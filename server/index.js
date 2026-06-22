@@ -807,6 +807,239 @@ app.put('/api/livestream', authenticateToken, requireRole(['super_admin', 'admin
   });
 });
 
+// Admin User Operations: Suspend
+app.post('/api/users/:uid/suspend', authenticateToken, requireRole(['super_admin', 'admin']), (req, res) => {
+  const { uid } = req.params;
+  const exists = db.prepare('SELECT 1 FROM users WHERE uid = ?').get(uid);
+  if (!exists) {
+    return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
+  }
+  db.prepare("UPDATE users SET status = 'suspended', lastActiveAt = ? WHERE uid = ?").run(
+    new Date().toISOString(),
+    uid
+  );
+  return res.json({ success: true });
+});
+
+// Admin User Operations: Activate
+app.post('/api/users/:uid/activate', authenticateToken, requireRole(['super_admin', 'admin']), (req, res) => {
+  const { uid } = req.params;
+  const exists = db.prepare('SELECT 1 FROM users WHERE uid = ?').get(uid);
+  if (!exists) {
+    return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
+  }
+  db.prepare("UPDATE users SET status = 'active', lastActiveAt = ? WHERE uid = ?").run(
+    new Date().toISOString(),
+    uid
+  );
+  return res.json({ success: true });
+});
+
+// Admin User Operations: Change Role
+app.put('/api/users/:uid/role', authenticateToken, requireRole(['super_admin', 'admin']), (req, res) => {
+  const { uid } = req.params;
+  const { role } = req.body;
+  const validRoles = ['super_admin', 'admin', 'leader', 'member', 'visitor'];
+  if (!role || !validRoles.includes(role)) {
+    return res.status(400).json({ success: false, error: 'Rol no valido' });
+  }
+  const exists = db.prepare('SELECT 1 FROM users WHERE uid = ?').get(uid);
+  if (!exists) {
+    return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
+  }
+  db.prepare("UPDATE users SET role = ?, lastActiveAt = ? WHERE uid = ?").run(
+    role,
+    new Date().toISOString(),
+    uid
+  );
+  return res.json({ success: true });
+});
+
+// Admin Content Operations: Delete
+app.delete('/api/content/:id', authenticateToken, requireRole(['super_admin', 'admin']), (req, res) => {
+  const { id } = req.params;
+  const exists = db.prepare('SELECT 1 FROM content WHERE id = ?').get(id);
+  if (!exists) {
+    return res.status(404).json({ success: false, error: 'Contenido no encontrado' });
+  }
+  db.prepare("DELETE FROM content WHERE id = ?").run(id);
+  return res.json({ success: true });
+});
+
+// Admin Content Operations: Update
+app.put('/api/content/:id', authenticateToken, requireRole(['super_admin', 'admin']), (req, res) => {
+  const { id } = req.params;
+  const {
+    type,
+    title,
+    body,
+    excerpt,
+    coverImage,
+    audioUrl,
+    videoUrl,
+    series,
+    tags,
+    bibleReference,
+    visibility,
+    publishedAt,
+    scheduledAt,
+    isDraft,
+  } = req.body;
+
+  const exists = db.prepare('SELECT * FROM content WHERE id = ?').get(id);
+  if (!exists) {
+    return res.status(404).json({ success: false, error: 'Contenido no encontrado' });
+  }
+
+  db.prepare(`
+    UPDATE content
+    SET type = ?, title = ?, body = ?, excerpt = ?, coverImage = ?, audioUrl = ?, videoUrl = ?,
+        series = ?, tags = ?, bibleReference = ?, visibility = ?, publishedAt = ?, scheduledAt = ?, isDraft = ?
+    WHERE id = ?
+  `).run(
+    type !== undefined ? type : exists.type,
+    title !== undefined ? title : exists.title,
+    body !== undefined ? body : exists.body,
+    excerpt !== undefined ? excerpt : exists.excerpt,
+    coverImage !== undefined ? coverImage : exists.coverImage,
+    audioUrl !== undefined ? audioUrl : exists.audioUrl,
+    videoUrl !== undefined ? videoUrl : exists.videoUrl,
+    series !== undefined ? series : exists.series,
+    tags !== undefined ? JSON.stringify(tags || []) : exists.tags,
+    bibleReference !== undefined ? bibleReference : exists.bibleReference,
+    visibility !== undefined ? visibility : exists.visibility,
+    publishedAt !== undefined ? publishedAt : exists.publishedAt,
+    scheduledAt !== undefined ? scheduledAt : exists.scheduledAt,
+    isDraft !== undefined ? (isDraft ? 1 : 0) : exists.isDraft,
+    id
+  );
+
+  const updated = db.prepare('SELECT * FROM content WHERE id = ?').get(id);
+  return res.json({
+    success: true,
+    content: formatContent(updated),
+  });
+});
+
+// Admin Events Operations: Delete
+app.delete('/api/events/:id', authenticateToken, requireRole(['super_admin', 'admin']), (req, res) => {
+  const { id } = req.params;
+  const exists = db.prepare('SELECT 1 FROM events WHERE id = ?').get(id);
+  if (!exists) {
+    return res.status(404).json({ success: false, error: 'Evento no encontrado' });
+  }
+  db.transaction(() => {
+    db.prepare("DELETE FROM event_target_groups WHERE eventId = ?").run(id);
+    db.prepare("DELETE FROM event_attendees WHERE eventId = ?").run(id);
+    db.prepare("DELETE FROM events WHERE id = ?").run(id);
+  })();
+  return res.json({ success: true });
+});
+
+// Admin Events Operations: Update
+app.put('/api/events/:id', authenticateToken, requireRole(['super_admin', 'admin']), (req, res) => {
+  const { id } = req.params;
+  const {
+    title,
+    description,
+    type,
+    format,
+    location,
+    virtualLink,
+    coverImage,
+    startDateTime,
+    endDateTime,
+    capacity,
+    requiresRSVP,
+    rsvpDeadline,
+    targetGroupIds
+  } = req.body;
+
+  const exists = db.prepare('SELECT * FROM events WHERE id = ?').get(id);
+  if (!exists) {
+    return res.status(404).json({ success: false, error: 'Evento no encontrado' });
+  }
+
+  db.transaction(() => {
+    db.prepare(`
+      UPDATE events
+      SET title = ?, description = ?, type = ?, format = ?, location = ?, virtualLink = ?, coverImage = ?,
+          startDateTime = ?, endDateTime = ?, capacity = ?, requiresRSVP = ?, rsvpDeadline = ?
+      WHERE id = ?
+    `).run(
+      title !== undefined ? title : exists.title,
+      description !== undefined ? description : exists.description,
+      type !== undefined ? type : exists.type,
+      format !== undefined ? format : exists.format,
+      location !== undefined ? location : exists.location,
+      virtualLink !== undefined ? virtualLink : exists.virtualLink,
+      coverImage !== undefined ? coverImage : exists.coverImage,
+      startDateTime !== undefined ? startDateTime : exists.startDateTime,
+      endDateTime !== undefined ? endDateTime : exists.endDateTime,
+      capacity !== undefined ? capacity : exists.capacity,
+      requiresRSVP !== undefined ? (requiresRSVP ? 1 : 0) : exists.requiresRSVP,
+      rsvpDeadline !== undefined ? rsvpDeadline : exists.rsvpDeadline,
+      id
+    );
+
+    if (targetGroupIds !== undefined && Array.isArray(targetGroupIds)) {
+      db.prepare('DELETE FROM event_target_groups WHERE eventId = ?').run(id);
+      const insertTarget = db.prepare('INSERT INTO event_target_groups (eventId, groupId) VALUES (?, ?)');
+      targetGroupIds.forEach(gId => {
+        insertTarget.run(id, gId);
+      });
+    }
+  })();
+
+  const updated = db.prepare('SELECT * FROM events WHERE id = ?').get(id);
+  return res.json({
+    success: true,
+    event: formatEvent(updated),
+  });
+});
+
+// Admin Analytics Operations: Get
+app.get('/api/analytics', authenticateToken, requireRole(['super_admin', 'admin']), (req, res) => {
+  const totalUsers = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+  const activeUsers = db.prepare("SELECT COUNT(*) as count FROM users WHERE status = 'active'").get().count;
+  const pendingUsers = db.prepare("SELECT COUNT(*) as count FROM users WHERE status = 'pending'").get().count;
+  
+  const totalDonations = db.prepare("SELECT SUM(amount) as sum FROM donations WHERE status = 'completed'").get().sum || 0;
+  
+  const donationsByFundRows = db.prepare("SELECT fund, SUM(amount) as sum FROM donations WHERE status = 'completed' GROUP BY fund").all();
+  const donationsByFund = { tithe: 0, offering: 0, missions: 0, building: 0, social: 0 };
+  donationsByFundRows.forEach(row => {
+    if (row.fund in donationsByFund) {
+      donationsByFund[row.fund] = row.sum || 0;
+    }
+  });
+
+  const publishedContent = db.prepare("SELECT COUNT(*) as count FROM content WHERE isDraft = 0").get().count;
+  const draftContent = db.prepare("SELECT COUNT(*) as count FROM content WHERE isDraft = 1").get().count;
+  const contentStats = { published: publishedContent, drafts: draftContent };
+
+  const cityDistribution = db.prepare("SELECT city, COUNT(*) as count FROM users GROUP BY city ORDER BY count DESC").all();
+
+  const weeklyAttendance = db.prepare("SELECT label, value FROM weekly_attendance").all();
+
+  const activePrayerRequests = db.prepare("SELECT COUNT(*) as count FROM prayer_requests WHERE status = 'active'").get().count;
+
+  return res.json({
+    success: true,
+    analytics: {
+      totalUsers,
+      activeUsers,
+      pendingUsers,
+      totalDonations,
+      donationsByFund,
+      contentStats,
+      cityDistribution,
+      weeklyAttendance,
+      activePrayerRequests,
+    }
+  });
+});
+
 // Supports both paths: PUT /api/config and PUT /api/organization
 const updateConfigHandler = (req, res) => {
   const { organizationName, themeColor } = req.body;
@@ -836,6 +1069,52 @@ const updateConfigHandler = (req, res) => {
 
 app.put('/api/config', authenticateToken, requireRole(['super_admin', 'admin']), updateConfigHandler);
 app.put('/api/organization', authenticateToken, requireRole(['super_admin', 'admin']), updateConfigHandler);
+
+app.put('/api/groups/:id', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const { name, description, meetingDay, meetingTime, meetingFormat, meetingLocation, meetingLink, maxCapacity } = req.body;
+
+  const group = db.prepare('SELECT * FROM groups WHERE id = ?').get(id);
+  if (!group) {
+    return res.status(404).json({ success: false, error: 'Grupo no encontrado' });
+  }
+
+  // Authorize: group leader themselves or admin
+  const isLeader = group.leaderId === req.user.uid;
+  const isAdmin = ['super_admin', 'admin'].includes(req.user.role);
+  if (!isLeader && !isAdmin) {
+    return res.status(403).json({ success: false, error: 'Acceso denegado. Solo el líder del grupo o un administrador pueden editarlo.' });
+  }
+
+  db.prepare(`
+    UPDATE groups SET
+      name = ?,
+      description = ?,
+      meetingDay = ?,
+      meetingTime = ?,
+      meetingFormat = ?,
+      meetingLocation = ?,
+      meetingLink = ?,
+      maxCapacity = ?
+    WHERE id = ?
+  `).run(
+    name !== undefined ? name : group.name,
+    description !== undefined ? description : group.description,
+    meetingDay !== undefined ? meetingDay : group.meetingDay,
+    meetingTime !== undefined ? meetingTime : group.meetingTime,
+    meetingFormat !== undefined ? meetingFormat : group.meetingFormat,
+    meetingLocation !== undefined ? meetingLocation : group.meetingLocation,
+    meetingLink !== undefined ? meetingLink : group.meetingLink,
+    maxCapacity !== undefined ? Number(maxCapacity) : group.maxCapacity,
+    id
+  );
+
+  const updated = db.prepare('SELECT * FROM groups WHERE id = ?').get(id);
+  return res.json({
+    success: true,
+    group: formatGroup(updated)
+  });
+});
 
 // Local listener
 if (!process.env.VERCEL) {

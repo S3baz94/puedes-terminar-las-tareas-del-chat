@@ -86,6 +86,14 @@ interface AppState {
     newUser: Omit<User, 'uid' | 'role' | 'status' | 'onboardingCompleted' | 'lastActiveAt' | 'createdAt' | 'privacySettings' | 'ministry' | 'groupIds'> & { password?: string },
     password?: string
   ) => Promise<boolean>;
+  suspendUser: (userId: string) => Promise<void>;
+  activateUser: (userId: string) => Promise<void>;
+  changeUserRole: (userId: string, role: string) => Promise<void>;
+  deleteContent: (contentId: string) => Promise<void>;
+  updateContentItem: (contentId: string, updates: Partial<Content>) => Promise<void>;
+  deleteEvent: (eventId: string) => Promise<void>;
+  updateEventItem: (eventId: string, updates: Partial<Event>) => Promise<void>;
+  updateGroupDetails: (groupId: string, updates: Partial<Group>) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()(
@@ -428,6 +436,135 @@ export const useAppStore = create<AppState>()(
           return true;
         } else {
           throw new Error(data.error || 'Error al registrar');
+        }
+      },
+      async suspendUser(userId) {
+        const res = await apiFetch(`/api/users/${userId}/suspend`, {
+          method: 'POST',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            set((state) => {
+              const updatedUsers = state.users.map((u) => (u.uid === userId ? { ...u, status: 'suspended' as const } : u));
+              const currentUser = useAuthStore.getState().user;
+              if (currentUser && currentUser.uid === userId) {
+                useAuthStore.setState({
+                  user: { ...currentUser, status: 'suspended' }
+                });
+              }
+              return { users: updatedUsers };
+            });
+          }
+        }
+      },
+      async activateUser(userId) {
+        const res = await apiFetch(`/api/users/${userId}/activate`, {
+          method: 'POST',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            set((state) => {
+              const updatedUsers = state.users.map((u) => (u.uid === userId ? { ...u, status: 'active' as const } : u));
+              const currentUser = useAuthStore.getState().user;
+              if (currentUser && currentUser.uid === userId) {
+                useAuthStore.setState({
+                  user: { ...currentUser, status: 'active' }
+                });
+              }
+              return { users: updatedUsers };
+            });
+          }
+        }
+      },
+      async changeUserRole(userId, role) {
+        const res = await apiFetch(`/api/users/${userId}/role`, {
+          method: 'PUT',
+          body: JSON.stringify({ role }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            set((state) => {
+              const updatedUsers = state.users.map((u) => (u.uid === userId ? { ...u, role: role as any } : u));
+              const currentUser = useAuthStore.getState().user;
+              if (currentUser && currentUser.uid === userId) {
+                useAuthStore.setState({
+                  user: { ...currentUser, role: role as any }
+                });
+              }
+              return { users: updatedUsers };
+            });
+          }
+        }
+      },
+      async deleteContent(contentId) {
+        const res = await apiFetch(`/api/content/${contentId}`, {
+          method: 'DELETE',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            set((state) => ({
+              content: state.content.filter((c) => c.id !== contentId),
+            }));
+          }
+        }
+      },
+      async updateContentItem(contentId, updates) {
+        const res = await apiFetch(`/api/content/${contentId}`, {
+          method: 'PUT',
+          body: JSON.stringify(updates),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.content) {
+            set((state) => ({
+              content: state.content.map((c) => (c.id === contentId ? data.content : c)),
+            }));
+          }
+        }
+      },
+      async deleteEvent(eventId) {
+        const res = await apiFetch(`/api/events/${eventId}`, {
+          method: 'DELETE',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            set((state) => ({
+              events: state.events.filter((e) => e.id !== eventId),
+            }));
+          }
+        }
+      },
+      async updateEventItem(eventId, updates) {
+        const res = await apiFetch(`/api/events/${eventId}`, {
+          method: 'PUT',
+          body: JSON.stringify(updates),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.event) {
+            set((state) => ({
+              events: state.events.map((e) => (e.id === eventId ? data.event : e)),
+            }));
+          }
+        }
+      },
+      async updateGroupDetails(groupId, updates) {
+        const res = await apiFetch(`/api/groups/${groupId}`, {
+          method: 'PUT',
+          body: JSON.stringify(updates),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.group) {
+            set((state) => ({
+              groups: state.groups.map((g) => (g.id === groupId ? data.group : g)),
+            }));
+          }
         }
       },
     }),

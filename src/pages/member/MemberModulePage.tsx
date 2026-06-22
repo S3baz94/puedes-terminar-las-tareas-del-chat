@@ -1,5 +1,6 @@
-import { FormEvent, useState, useEffect } from 'react';
+import { FormEvent, useState, useEffect, useMemo } from 'react';
 import { BookOpen, CheckCircle2, Download, Gift, Heart, Play, Search, Send, PlayCircle } from 'lucide-react';
+import type { User } from '../../types/models';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
 import { Input } from '../../components/common/Input';
@@ -10,6 +11,22 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppStore } from '../../store/appStore';
 import { formatCurrency, formatDateTime } from '../../utils/format';
+
+const spiritualStatusLabels: Record<string, string> = {
+  new_believer: 'Nuevo Creyente',
+  growing: 'En Crecimiento',
+  established: 'Maduro / Establecido',
+  leader_in_training: 'Líder en Formación',
+};
+
+const predefinedAvatars = [
+  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80",
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80",
+  "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&h=150&q=80",
+  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&h=150&q=80",
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80",
+  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&h=150&q=80",
+];
 
 export type MemberModule = 'biblia' | 'devocional' | 'oracion' | 'grupos' | 'en-vivo' | 'dar' | 'perfil';
 
@@ -33,6 +50,7 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
   const content = useAppStore((state) => state.content);
   const groups = useAppStore((state) => state.groups);
   const liveStream = useAppStore((state) => state.liveStream);
+  const users = useAppStore((state) => state.users);
 
   // Zustand actions
   const addDonation = useAppStore((state) => state.addDonation);
@@ -56,16 +74,30 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
   const [prayerVisibility, setPrayerVisibility] = useState<'public' | 'group' | 'private'>('public');
   const [prayerMessage, setPrayerMessage] = useState<string | null>(null);
 
-  // Profile state
+  // Tab navigation
+  const [activeTab, setActiveTab] = useState<'info' | 'spiritual' | 'privacy'>('info');
+
+  // Profile fields state
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [favoriteVerse, setFavoriteVerse] = useState('');
-  const [profileMessage, setProfileMessage] = useState<string | null>(null);
+  const [city, setCity] = useState('');
+  const [country, setCountry] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+  const [baptismDate, setBaptismDate] = useState('');
+  const [testimony, setTestimony] = useState('');
+  const [spiritualStatus, setSpiritualStatus] = useState('');
+  const [photoURL, setPhotoURL] = useState('');
+  const [leaderId, setLeaderId] = useState('');
 
   const [showPhone, setShowPhone] = useState(false);
   const [showEmail, setShowEmail] = useState(true);
   const [showCity, setShowCity] = useState(true);
+  const [profileMessage, setProfileMessage] = useState<string | null>(null);
+
+  // Mentors selection
+  const mentors = useMemo(() => users.filter((u) => ['admin', 'super_admin', 'leader'].includes(u.role)), [users]);
 
   // Color highlight
   const [selectedColor, setSelectedColor] = useState('');
@@ -80,6 +112,14 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
       setShowPhone(user.privacySettings?.showPhone ?? false);
       setShowEmail(user.privacySettings?.showEmail ?? true);
       setShowCity(user.privacySettings?.showCity ?? true);
+      setCity(user.city || '');
+      setCountry(user.country || 'Colombia');
+      setBirthDate(user.birthDate || '');
+      setBaptismDate(user.baptismDate || '');
+      setTestimony(user.testimony || '');
+      setSpiritualStatus(user.spiritualStatus || 'new_believer');
+      setPhotoURL(user.photoURL || '');
+      setLeaderId(user.leaderId || '');
     }
   }, [user]);
 
@@ -126,24 +166,49 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
     setTimeout(() => setPrayerMessage(null), 3000);
   }
 
-  function handleSaveProfile(event: FormEvent) {
+  async function handleAvatarSelect(url: string) {
+    setPhotoURL(url);
+    if (!user) return;
+    try {
+      await updateUserProfile(user.uid, {
+        photoURL: url
+      });
+      setProfileMessage('¡Avatar actualizado con éxito!');
+      setTimeout(() => setProfileMessage(null), 3000);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function handleSaveProfile(event: FormEvent) {
     event.preventDefault();
     if (!user) return;
 
-    updateUserProfile(user.uid, {
-      displayName,
-      email,
-      phone,
-      favoriteVerse,
-      privacySettings: {
-        showPhone,
-        showEmail,
-        showCity,
-      },
-    });
-
-    setProfileMessage('¡Perfil y configuración de privacidad actualizados!');
-    setTimeout(() => setProfileMessage(null), 3000);
+    try {
+      await updateUserProfile(user.uid, {
+        displayName,
+        phone,
+        city,
+        country,
+        birthDate: birthDate || undefined,
+        baptismDate: baptismDate || undefined,
+        favoriteVerse: favoriteVerse || undefined,
+        testimony: testimony || undefined,
+        spiritualStatus: spiritualStatus as any,
+        photoURL: photoURL || undefined,
+        leaderId: leaderId || undefined,
+        privacySettings: {
+          showPhone,
+          showEmail,
+          showCity,
+        },
+      });
+      setProfileMessage('¡Perfil y configuración de privacidad actualizados!');
+      setTimeout(() => setProfileMessage(null), 3000);
+    } catch (err) {
+      setProfileMessage('Error al actualizar el perfil.');
+      setTimeout(() => setProfileMessage(null), 3000);
+    }
   }
 
   // Interactive buttons handlers
@@ -433,31 +498,217 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
       ) : null}
 
       {module === 'perfil' ? (
-        <div className="grid gap-6 xl:grid-cols-[1fr_24rem]">
-          <Card title="Datos personales">
-            <form className="space-y-4" onSubmit={handleSaveProfile}>
-              <div className="grid gap-4 md:grid-cols-2">
-                <Input value={displayName} onChange={(e) => setDisplayName(e.currentTarget.value)} label="Nombre" />
-                <Input value={email} onChange={(e) => setEmail(e.currentTarget.value)} label="Correo" />
-                <Input value={phone} onChange={(e) => setPhone(e.currentTarget.value)} label="Telefono" />
-                <Input value={favoriteVerse} onChange={(e) => setFavoriteVerse(e.currentTarget.value)} label="Versiculo favorito" />
+        <div className="grid gap-6 lg:grid-cols-[20rem_1fr]">
+          {/* Left Column: Profile Card Header & Avatar Picker */}
+          <div className="space-y-6">
+            <Card title="">
+              <div className="flex flex-col items-center text-center p-4">
+                <div className="relative group">
+                  <img
+                    src={photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80"}
+                    alt="Avatar"
+                    className="h-28 w-28 rounded-full border-4 border-primary/20 object-cover shadow-md transition-all group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center rounded-full bg-ink/40 opacity-0 transition-all group-hover:opacity-100">
+                    <span className="text-xs font-bold text-white">Cambiar</span>
+                  </div>
+                </div>
+                <h3 className="mt-4 text-xl font-bold text-ink">{displayName || 'Miembro'}</h3>
+                <p className="text-sm font-semibold text-muted">{email}</p>
+                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                  <StatusPill tone="primary">{user ? user.role : 'Miembro'}</StatusPill>
+                  <StatusPill tone="success">{spiritualStatusLabels[spiritualStatus] || 'Miembro'}</StatusPill>
+                </div>
               </div>
-              {profileMessage ? <p className="text-sm font-semibold text-green-600 mt-2">{profileMessage}</p> : null}
-              <Button type="submit" className="mt-4">Guardar perfil</Button>
-            </form>
-            <div className="mt-6">
-              <FormationProgress />
-            </div>
-          </Card>
-          <Card eyebrow="Privacidad" title="Visibilidad">
-            <form onSubmit={handleSaveProfile} className="space-y-3">
-              <Toggle checked={showPhone} label="Mostrar telefono" onChange={setShowPhone} />
-              <Toggle checked={showEmail} label="Mostrar correo" onChange={setShowEmail} />
-              <Toggle checked={showCity} label="Mostrar ciudad" onChange={setShowCity} />
-              {profileMessage ? <p className="text-sm font-semibold text-green-600 mt-2">{profileMessage}</p> : null}
-              <Button className="w-full mt-4" type="submit">Guardar cambios de privacidad</Button>
-            </form>
-          </Card>
+
+              {/* Avatar Grid Selection */}
+              <div className="border-t border-slate-100 p-4">
+                <p className="text-xs font-bold text-muted mb-3 text-center uppercase tracking-wider">Elegir un Avatar Demo</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {predefinedAvatars.map((url, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => handleAvatarSelect(url)}
+                      className={`h-12 w-12 rounded-full overflow-hidden border-2 transition-all ${
+                        photoURL === url ? 'border-primary scale-105 shadow-md ring-2 ring-primary/20' : 'border-transparent opacity-80 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={url} alt={`Avatar option ${i}`} className="h-full w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </Card>
+
+            {/* Sidebar Navigation Tabs */}
+            <Card title="Menú de Ajustes">
+              <div className="flex flex-col gap-1 p-1">
+                {[
+                  { id: 'info', label: '👤 Info Personal' },
+                  { id: 'spiritual', label: '🌱 Camino Espiritual' },
+                  { id: 'privacy', label: '🔒 Privacidad y Progreso' }
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`flex items-center rounded-lg px-4 py-3 text-sm font-semibold transition-all ${
+                      activeTab === tab.id
+                        ? 'bg-primary/10 text-primary shadow-sm'
+                        : 'text-muted hover:bg-slate-50 hover:text-ink'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          {/* Right Column: Tab Content */}
+          <div className="space-y-6">
+            {activeTab === 'info' && (
+              <Card title="Información Personal">
+                <form onSubmit={handleSaveProfile} className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Input
+                      label="Nombre Completo"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.currentTarget.value)}
+                    />
+                    <Input
+                      label="Teléfono"
+                      value={phone}
+                      onChange={(e) => setPhone(e.currentTarget.value)}
+                    />
+                    <Input
+                      label="Ciudad"
+                      value={city}
+                      onChange={(e) => setCity(e.currentTarget.value)}
+                    />
+                    <Input
+                      label="País"
+                      value={country}
+                      onChange={(e) => setCountry(e.currentTarget.value)}
+                    />
+                    <Input
+                      label="Fecha de Nacimiento"
+                      type="date"
+                      value={birthDate ? birthDate.substring(0, 10) : ''}
+                      onChange={(e) => setBirthDate(e.currentTarget.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-semibold text-ink">Mi Testimonio</span>
+                      <textarea
+                        className="min-h-36 w-full rounded-lg border border-slate-200 p-3 text-sm shadow-panel focus:border-primary focus:ring-1 focus:ring-primary"
+                        placeholder="Comparte cómo ha sido tu experiencia con Dios..."
+                        value={testimony}
+                        onChange={(e) => setTestimony(e.currentTarget.value)}
+                      />
+                    </label>
+                  </div>
+                  {profileMessage && <p className="text-sm font-semibold text-green-600">{profileMessage}</p>}
+                  <div className="flex justify-end">
+                    <Button type="submit">Guardar Datos Personales</Button>
+                  </div>
+                </form>
+              </Card>
+            )}
+
+            {activeTab === 'spiritual' && (
+              <Card title="Mi Camino Espiritual">
+                <form onSubmit={handleSaveProfile} className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Input
+                      label="Versículo Favorito"
+                      value={favoriteVerse}
+                      onChange={(e) => setFavoriteVerse(e.currentTarget.value)}
+                      placeholder="Salmos 23:1"
+                    />
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-semibold text-ink">Estado Espiritual</span>
+                      <select
+                        className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm shadow-panel"
+                        value={spiritualStatus}
+                        onChange={(e) => setSpiritualStatus(e.target.value)}
+                      >
+                        {Object.entries(spiritualStatusLabels).map(([val, lbl]) => (
+                          <option key={val} value={val}>{lbl}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <Input
+                      label="Fecha de Bautismo"
+                      type="date"
+                      value={baptismDate ? baptismDate.substring(0, 10) : ''}
+                      onChange={(e) => setBaptismDate(e.currentTarget.value)}
+                    />
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-semibold text-ink">Mentor / Acompañante Espiritual</span>
+                      <select
+                        className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm shadow-panel"
+                        value={leaderId}
+                        onChange={(e) => setLeaderId(e.target.value)}
+                      >
+                        <option value="">Ninguno</option>
+                        {mentors.map((m: User) => (
+                          <option key={m.uid} value={m.uid}>
+                            {m.displayName} ({m.role === 'leader' ? 'Líder' : 'Admin'})
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+
+                  {/* Read-only Ministries */}
+                  {user?.ministry && user.ministry.length > 0 && (
+                    <div className="border-t border-slate-100 pt-4 mt-4">
+                      <span className="mb-2 block text-sm font-semibold text-ink">Mis Ministerios Asignados</span>
+                      <div className="flex flex-wrap gap-2">
+                        {user.ministry.map((min) => (
+                          <span key={min} className="inline-flex items-center bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full text-xs font-bold">
+                            {min}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {profileMessage && <p className="text-sm font-semibold text-green-600">{profileMessage}</p>}
+                  <div className="flex justify-end">
+                    <Button type="submit">Guardar Datos Espirituales</Button>
+                  </div>
+                </form>
+              </Card>
+            )}
+
+            {activeTab === 'privacy' && (
+              <div className="space-y-6">
+                <Card eyebrow="Privacidad" title="Visibilidad en Directorio">
+                  <form onSubmit={handleSaveProfile} className="space-y-4">
+                    <div className="space-y-3">
+                      <Toggle checked={showPhone} label="Mostrar mi número de teléfono en el directorio" onChange={setShowPhone} />
+                      <Toggle checked={showEmail} label="Mostrar mi correo en el directorio" onChange={setShowEmail} />
+                      <Toggle checked={showCity} label="Mostrar mi ciudad en el directorio" onChange={setShowCity} />
+                    </div>
+                    {profileMessage && <p className="text-sm font-semibold text-green-600">{profileMessage}</p>}
+                    <div className="flex justify-end">
+                      <Button type="submit">Guardar Privacidad</Button>
+                    </div>
+                  </form>
+                </Card>
+
+                <Card eyebrow="Cursos" title="Mi Progreso de Formación">
+                  <div className="p-1">
+                    <FormationProgress />
+                  </div>
+                </Card>
+              </div>
+            )}
+          </div>
         </div>
       ) : null}
     </div>

@@ -16,7 +16,12 @@ export function AdminDashboard() {
   const donations = useAppStore((state) => state.donations);
   const prayerRequests = useAppStore((state) => state.prayerRequests);
   const events = useAppStore((state) => state.events);
+  const content = useAppStore((state) => state.content);
   const approveUser = useAppStore((state) => state.approveUser);
+
+  const publishedCount = content.filter((c) => !c.isDraft).length;
+  const draftCount = content.filter((c) => c.isDraft).length;
+  const totalCount = content.length;
 
   const activeMembers = users.filter((user) => user.status === 'active').length;
   const pendingUsers = users.filter((user) => user.status === 'pending');
@@ -138,9 +143,9 @@ export function AdminDashboard() {
         <Card eyebrow="Contenido" title="Resumen editorial">
           <div className="grid gap-3 sm:grid-cols-3">
             {[
-              ['Publicados', '18'],
-              ['Borradores', '3'],
-              ['Programados', '5'],
+              ['Publicados', publishedCount],
+              ['Borradores', draftCount],
+              ['Total', totalCount],
             ].map(([label, value]) => (
               <div className="rounded-lg border border-slate-200 bg-slate-50 p-4" key={label}>
                 <p className="text-2xl font-extrabold text-ink">{value}</p>

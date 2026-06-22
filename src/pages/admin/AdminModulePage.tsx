@@ -1,5 +1,5 @@
 import { useMemo, useState, FormEvent, useEffect } from 'react';
-import { Eye, Filter, Plus, Save, Search, Upload } from 'lucide-react';
+import { Eye, Filter, Plus, Save, Search, Upload, Trash2 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
 import { DataTable, type Column } from '../../components/common/DataTable';
@@ -34,22 +34,7 @@ const moduleTitles: Record<AdminModule, string> = {
   configuracion: 'Configuracion',
 };
 
-const userColumns: Column<User>[] = [
-  { header: 'Nombre', accessor: 'displayName' },
-  {
-    header: 'Rol',
-    accessor: (row) => <StatusPill tone="primary">{roleLabels[row.role]}</StatusPill>,
-  },
-  {
-    header: 'Estado',
-    accessor: (row) => <StatusPill tone={statusTone(row.status)}>{row.status}</StatusPill>,
-  },
-  { header: 'Ciudad', accessor: 'city' },
-  {
-    header: 'Ultima actividad',
-    accessor: (row) => formatDateTime(row.lastActiveAt),
-  },
-];
+// userColumns removed from outer scope and moved inside the component body dynamically
 
 const donationColumns: Column<Donation>[] = [
   { header: 'Fondo', accessor: 'fund' },
@@ -62,13 +47,7 @@ const donationColumns: Column<Donation>[] = [
   { header: 'Fecha', accessor: (row) => formatDateTime(row.createdAt) },
 ];
 
-const eventColumns: Column<Event>[] = [
-  { header: 'Evento', accessor: 'title' },
-  { header: 'Tipo', accessor: 'type' },
-  { header: 'Formato', accessor: 'format' },
-  { header: 'Fecha', accessor: (row) => formatDateTime(row.startDateTime) },
-  { header: 'Inscritos', accessor: (row) => String(row.attendeeIds.length) },
-];
+// eventColumns removed from outer scope and moved inside the component body dynamically
 
 const integrationStatuses = [
   { label: 'Firebase Auth', status: hasFirebaseConfig ? 'listo' : 'demo', tone: hasFirebaseConfig ? 'success' : 'warning' },
@@ -97,6 +76,107 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
   const updateLiveStreamSettings = useAppStore((state) => state.updateLiveStreamSettings);
   const updateOrganizationName = useAppStore((state) => state.updateOrganizationName);
   const updateThemeColor = useAppStore((state) => state.updateThemeColor);
+  const suspendUser = useAppStore((state) => state.suspendUser);
+  const activateUser = useAppStore((state) => state.activateUser);
+  const changeUserRole = useAppStore((state) => state.changeUserRole);
+  const deleteContent = useAppStore((state) => state.deleteContent);
+  const deleteEvent = useAppStore((state) => state.deleteEvent);
+
+  // Dynamic / Action-enabled columns
+  const userColumns = useMemo<Column<User>[]>(() => [
+    { header: 'Nombre', accessor: 'displayName' },
+    {
+      header: 'Rol',
+      accessor: (row) => (
+        <select
+          value={row.role}
+          onChange={(e) => changeUserRole(row.uid, e.target.value)}
+          className="rounded border border-slate-200 bg-white p-1 text-xs text-ink"
+        >
+          {Object.entries(roleLabels).map(([role, label]) => (
+            <option key={role} value={role}>{label}</option>
+          ))}
+        </select>
+      ),
+    },
+    {
+      header: 'Estado',
+      accessor: (row) => <StatusPill tone={statusTone(row.status)}>{row.status}</StatusPill>,
+    },
+    { header: 'Ciudad', accessor: 'city' },
+    {
+      header: 'Ultima actividad',
+      accessor: (row) => formatDateTime(row.lastActiveAt),
+    },
+    {
+      header: 'Acciones',
+      accessor: (row) => (
+        <div className="flex gap-2">
+          {row.status === 'active' ? (
+            <Button size="sm" variant="danger" onClick={() => suspendUser(row.uid)}>
+              Suspender
+            </Button>
+          ) : (
+            <Button size="sm" variant="success" onClick={() => activateUser(row.uid)}>
+              Activar
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ], [suspendUser, activateUser, changeUserRole]);
+
+  const eventColumns = useMemo<Column<Event>[]>(() => [
+    { header: 'Evento', accessor: 'title' },
+    { header: 'Tipo', accessor: 'type' },
+    { header: 'Formato', accessor: 'format' },
+    { header: 'Fecha', accessor: (row) => formatDateTime(row.startDateTime) },
+    { header: 'Inscritos', accessor: (row) => String(row.attendeeIds.length) },
+    {
+      header: 'Acciones',
+      accessor: (row) => (
+        <Button size="sm" variant="danger" onClick={() => deleteEvent(row.id)}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      ),
+    },
+  ], [deleteEvent]);
+
+  // Livestream form state
+  const [liveTitle, setLiveTitle] = useState(liveStream?.title || '');
+  const [livePlatform, setLivePlatform] = useState<'youtube' | 'facebook' | 'internal'>(liveStream?.platform || 'youtube');
+  const [liveUrl, setLiveUrl] = useState(liveStream?.streamUrl || '');
+  const [liveDate, setLiveDate] = useState(liveStream?.scheduledAt || '');
+
+  useEffect(() => {
+    if (liveStream) {
+      setLiveTitle(liveStream.title);
+      setLivePlatform(liveStream.platform);
+      setLiveUrl(liveStream.streamUrl);
+      setLiveDate(liveStream.scheduledAt);
+    }
+  }, [liveStream]);
+
+  function handleSaveLiveStream(event: FormEvent) {
+    event.preventDefault();
+    updateLiveStreamSettings({
+      title: liveTitle,
+      platform: livePlatform,
+      streamUrl: liveUrl,
+      scheduledAt: liveDate,
+    });
+    alert('Culto programado con éxito.');
+  }
+
+  // Analytics helper data
+  const cityMap = users.reduce((acc, u) => {
+    const city = u.city || 'Desconocido';
+    acc[city] = (acc[city] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  const topCities = Object.entries(cityMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4);
 
   const [query, setQuery] = useState('');
   const title = moduleTitles[module];
@@ -288,7 +368,12 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
                     <StatusPill tone={item.isDraft ? 'warning' : 'success'}>
                       {item.isDraft ? 'borrador' : 'publicado'}
                     </StatusPill>
-                    <span className="text-xs font-bold text-muted">{item.visibility}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-muted">{item.visibility}</span>
+                      <Button size="sm" variant="ghost" onClick={() => deleteContent(item.id)} className="text-danger hover:bg-red-50 p-1 h-7 w-7">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                   <h2 className="mt-4 text-lg font-extrabold text-ink">{item.title}</h2>
                   <p className="mt-2 text-sm leading-6 text-muted">{item.excerpt}</p>
@@ -399,9 +484,9 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
           </Card>
           <Card eyebrow="Ubicaciones" title="Mapa de miembros">
             <div className="grid gap-3 sm:grid-cols-2">
-              {['Bogota', 'Medellin', 'Cali', 'Barranquilla'].map((city, index) => (
+              {topCities.map(([city, count]) => (
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-4" key={city}>
-                  <p className="text-2xl font-extrabold text-ink">{[42, 23, 17, 9][index]}</p>
+                  <p className="text-2xl font-extrabold text-ink">{count}</p>
                   <p className="text-sm font-semibold text-muted">{city}</p>
                 </div>
               ))}
@@ -444,14 +529,45 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
               </div>
             </div>
           </Card>
-          <Card title="Controles">
-            <div className="space-y-3">
+          <Card title="Controles y Programación">
+            <form className="space-y-4" onSubmit={handleSaveLiveStream}>
               <Toggle checked={liveStream.chatEnabled} label="Chat activo" onChange={setChatEnabled} />
               <Toggle checked={liveStream.offeringEnabled} label="Ofrenda activa" onChange={setOfferingEnabled} />
-              <Button className="w-full" variant="success" onClick={() => alert('Culto programado con éxito.')}>
+              <hr className="border-slate-200" />
+              <Input
+                label="Título del Culto"
+                value={liveTitle}
+                onChange={(e) => setLiveTitle(e.currentTarget.value)}
+                placeholder="Culto dominical"
+              />
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-ink">Plataforma</span>
+                <select
+                  className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm shadow-panel"
+                  value={livePlatform}
+                  onChange={(e) => setLivePlatform(e.target.value as any)}
+                >
+                  <option value="youtube">YouTube</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="internal">Interno</option>
+                </select>
+              </label>
+              <Input
+                label="URL de Transmisión"
+                value={liveUrl}
+                onChange={(e) => setLiveUrl(e.currentTarget.value)}
+                placeholder="https://youtube.com/live/..."
+              />
+              <Input
+                label="Fecha y hora programada"
+                type="datetime-local"
+                value={liveDate ? liveDate.substring(0, 16) : ''}
+                onChange={(e) => setLiveDate(e.currentTarget.value ? new Date(e.currentTarget.value).toISOString() : '')}
+              />
+              <Button className="w-full" variant="success" type="submit">
                 Programar culto
               </Button>
-            </div>
+            </form>
           </Card>
         </div>
       ) : null}
