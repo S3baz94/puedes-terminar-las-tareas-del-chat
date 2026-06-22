@@ -1,0 +1,513 @@
+// Generated file. Do not edit.
+export const demoCredentials = [
+  {
+    "email": "admin@iglesia.com",
+    "password": "Admin123!",
+    "role": "admin"
+  },
+  {
+    "email": "lider@iglesia.com",
+    "password": "Lider123!",
+    "role": "leader"
+  },
+  {
+    "email": "miembro@iglesia.com",
+    "password": "Miembro123!",
+    "role": "member"
+  }
+];
+
+export const formationSteps = [
+  {
+    "label": "Bienvenida",
+    "progress": 100
+  },
+  {
+    "label": "Fundamentos",
+    "progress": 72
+  },
+  {
+    "label": "Servicio",
+    "progress": 46
+  },
+  {
+    "label": "Mentoria",
+    "progress": 20
+  }
+];
+
+export const mockContent = [
+  {
+    "id": "c-1",
+    "type": "devotional",
+    "title": "Devocional del dia",
+    "body": "Busquen primeramente el reino de Dios y su justicia.",
+    "excerpt": "Una reflexion breve para iniciar el dia con enfoque.",
+    "authorId": "u-admin",
+    "tags": [
+      "devocional",
+      "oracion"
+    ],
+    "bibleReference": "Mateo 6:33",
+    "visibility": "members",
+    "publishedAt": "2026-06-01T06:00:00-05:00",
+    "isDraft": false,
+    "viewCount": 482,
+    "createdAt": "2026-05-31T15:00:00-05:00"
+  },
+  {
+    "id": "c-2",
+    "type": "sermon",
+    "title": "La mesa invisible",
+    "body": "Serie sobre comunidad, servicio y presencia cotidiana.",
+    "excerpt": "Mensaje central del domingo con audio y video.",
+    "authorId": "u-leader",
+    "series": "Los caminos de Jesus",
+    "tags": [
+      "sermon",
+      "comunidad"
+    ],
+    "bibleReference": "Lucas 14:13",
+    "visibility": "public",
+    "publishedAt": "2026-05-26T11:00:00-05:00",
+    "isDraft": false,
+    "viewCount": 1290,
+    "createdAt": "2026-05-25T14:00:00-05:00"
+  },
+  {
+    "id": "c-3",
+    "type": "announcement",
+    "title": "Retiro de servidores",
+    "body": "Inscripciones abiertas hasta el viernes.",
+    "excerpt": "Cupos limitados para equipos de servicio.",
+    "authorId": "u-admin",
+    "tags": [
+      "retiro",
+      "servidores"
+    ],
+    "visibility": "leaders",
+    "scheduledAt": "2026-06-03T08:00:00-05:00",
+    "isDraft": true,
+    "viewCount": 0,
+    "createdAt": "2026-06-01T12:00:00-05:00"
+  }
+];
+
+export const mockDonations = [
+  {
+    "id": "d-1",
+    "userId": "u-member",
+    "amount": 120000,
+    "currency": "COP",
+    "fund": "tithe",
+    "method": "card",
+    "stripePaymentId": "pi_demo_001",
+    "receiptUrl": "#",
+    "isRecurring": true,
+    "recurringFrequency": "monthly",
+    "status": "completed",
+    "createdAt": "2026-06-01T08:00:00-05:00"
+  },
+  {
+    "id": "d-2",
+    "userId": "u-admin",
+    "amount": 85000,
+    "currency": "COP",
+    "fund": "missions",
+    "method": "transfer",
+    "isRecurring": false,
+    "status": "completed",
+    "createdAt": "2026-05-31T20:00:00-05:00"
+  },
+  {
+    "id": "d-3",
+    "userId": "u-leader",
+    "amount": 60000,
+    "currency": "COP",
+    "fund": "offering",
+    "method": "cash",
+    "isRecurring": false,
+    "status": "pending",
+    "createdAt": "2026-05-30T19:00:00-05:00"
+  }
+];
+
+export const mockEvents = [
+  {
+    "id": "e-1",
+    "title": "Culto de celebracion",
+    "description": "Servicio dominical con transmision en vivo.",
+    "type": "service",
+    "format": "hybrid",
+    "location": "Auditorio principal",
+    "virtualLink": "https://youtube.com/demo",
+    "startDateTime": "2026-06-07T10:00:00-05:00",
+    "endDateTime": "2026-06-07T12:00:00-05:00",
+    "organizerId": "u-admin",
+    "targetGroupIds": [],
+    "capacity": 350,
+    "requiresRSVP": false,
+    "attendeeIds": [
+      "u-admin",
+      "u-leader",
+      "u-member"
+    ],
+    "reminderSent": true,
+    "createdAt": "2026-05-20T12:00:00-05:00"
+  },
+  {
+    "id": "e-2",
+    "title": "Reunion Casa Central",
+    "description": "Estudio biblico y oracion por grupos.",
+    "type": "cell",
+    "format": "hybrid",
+    "location": "Cra 15 #82-40",
+    "virtualLink": "https://meet.google.com/demo-central",
+    "startDateTime": "2026-06-04T19:30:00-05:00",
+    "endDateTime": "2026-06-04T21:00:00-05:00",
+    "organizerId": "u-leader",
+    "targetGroupIds": [
+      "g-central"
+    ],
+    "capacity": 18,
+    "requiresRSVP": true,
+    "rsvpDeadline": "2026-06-04T12:00:00-05:00",
+    "attendeeIds": [
+      "u-member"
+    ],
+    "reminderSent": false,
+    "createdAt": "2026-05-28T10:00:00-05:00"
+  }
+];
+
+export const mockGroups = [
+  {
+    "id": "g-central",
+    "name": "Casa Central",
+    "description": "Grupo de vida para jovenes profesionales y matrimonios recientes.",
+    "type": "cell",
+    "leaderId": "u-leader",
+    "coLeaderIds": [],
+    "memberIds": [
+      "u-member",
+      "u-inactive"
+    ],
+    "maxCapacity": 18,
+    "meetingDay": "Jueves",
+    "meetingTime": "19:30",
+    "meetingFormat": "hybrid",
+    "meetingLocation": "Cra 15 #82-40",
+    "meetingLink": "https://meet.google.com/demo-central",
+    "isPublic": true,
+    "createdAt": "2025-03-10T09:00:00-05:00"
+  },
+  {
+    "id": "g-alabanza",
+    "name": "Alabanza",
+    "description": "Ministerio musical y produccion de culto.",
+    "type": "ministry",
+    "leaderId": "u-admin",
+    "coLeaderIds": [
+      "u-leader"
+    ],
+    "memberIds": [
+      "u-member"
+    ],
+    "maxCapacity": 24,
+    "meetingDay": "Sabado",
+    "meetingTime": "10:00",
+    "meetingFormat": "in_person",
+    "meetingLocation": "Auditorio principal",
+    "isPublic": false,
+    "createdAt": "2025-04-15T09:00:00-05:00"
+  }
+];
+
+export const mockLiveStream = {
+  "id": "ls-1",
+  "title": "Culto de celebracion",
+  "platform": "youtube",
+  "streamUrl": "https://youtube.com/demo",
+  "chatEnabled": true,
+  "offeringEnabled": true,
+  "scheduledAt": "2026-06-07T10:00:00-05:00",
+  "status": "scheduled",
+  "viewerCount": 0,
+  "createdAt": "2026-05-31T18:00:00-05:00"
+};
+
+export const mockMessages = [
+  {
+    "id": "m-1",
+    "conversationId": "g-central",
+    "senderId": "u-leader",
+    "content": "Confirmemos asistencia para el jueves.",
+    "type": "text",
+    "readBy": [
+      "u-member"
+    ],
+    "isPinned": true,
+    "createdAt": "2026-06-01T09:00:00-05:00"
+  },
+  {
+    "id": "m-2",
+    "conversationId": "g-central",
+    "senderId": "u-member",
+    "content": "Yo puedo llevar cafe para todos.",
+    "type": "text",
+    "readBy": [
+      "u-leader"
+    ],
+    "isPinned": false,
+    "createdAt": "2026-06-01T09:20:00-05:00"
+  }
+];
+
+export const mockNotifications = [
+  {
+    "id": "nt-1",
+    "userId": "u-leader",
+    "title": "Seguimiento pastoral",
+    "body": "Ana necesita contacto antes del miercoles.",
+    "type": "urgent",
+    "category": "pastoral",
+    "actionUrl": "/leader/pastoral",
+    "isRead": false,
+    "createdAt": "2026-06-01T10:30:00-05:00"
+  },
+  {
+    "id": "nt-2",
+    "userId": "u-member",
+    "title": "Devocional disponible",
+    "body": "El devocional de hoy ya esta listo.",
+    "type": "informational",
+    "category": "content",
+    "actionUrl": "/member/devocional",
+    "isRead": false,
+    "createdAt": "2026-06-01T06:00:00-05:00"
+  }
+];
+
+export const mockPastoralNotes = [
+  {
+    "id": "n-1",
+    "memberId": "u-member",
+    "leaderId": "u-leader",
+    "type": "call",
+    "content": "Conversacion sobre integracion al ministerio de alabanza.",
+    "followUpDate": "2026-06-06",
+    "memberStatus": "active",
+    "isPrivate": true,
+    "createdAt": "2026-05-30T17:40:00-05:00"
+  },
+  {
+    "id": "n-2",
+    "memberId": "u-inactive",
+    "leaderId": "u-leader",
+    "type": "message",
+    "content": "No asistio las ultimas dos reuniones. Enviar invitacion personal.",
+    "followUpDate": "2026-06-02",
+    "memberStatus": "inactive",
+    "isPrivate": true,
+    "createdAt": "2026-05-29T12:30:00-05:00"
+  }
+];
+
+export const mockPrayerRequests = [
+  {
+    "id": "p-1",
+    "userId": "u-member",
+    "title": "Direccion laboral",
+    "description": "Orar por una entrevista importante esta semana.",
+    "visibility": "group",
+    "groupId": "g-central",
+    "status": "active",
+    "prayerCount": 31,
+    "prayedByIds": [
+      "u-admin",
+      "u-leader"
+    ],
+    "pastoralNote": "Hacer seguimiento el jueves despues de la reunion.",
+    "createdAt": "2026-05-30T18:00:00-05:00"
+  },
+  {
+    "id": "p-2",
+    "userId": "u-inactive",
+    "title": "Salud familiar",
+    "description": "La mama de Ana esta en tratamiento.",
+    "visibility": "private",
+    "groupId": "g-central",
+    "status": "active",
+    "prayerCount": 12,
+    "prayedByIds": [
+      "u-leader"
+    ],
+    "pastoralNote": "Llamar hoy en la tarde.",
+    "createdAt": "2026-05-29T11:00:00-05:00"
+  }
+];
+
+export const mockUsers = [
+  {
+    "uid": "u-admin",
+    "email": "admin@iglesia.com",
+    "displayName": "Camila Rojas",
+    "role": "admin",
+    "phone": "+57 300 111 2233",
+    "city": "Bogota",
+    "country": "Colombia",
+    "birthDate": "1988-05-12",
+    "baptismDate": "2005-08-20",
+    "favoriteVerse": "Romanos 8:28",
+    "testimony": "Sirve coordinando comunicaciones y discipulado.",
+    "ministry": [
+      "Comunicaciones",
+      "Administracion"
+    ],
+    "groupIds": [
+      "g-central"
+    ],
+    "status": "active",
+    "spiritualStatus": "established",
+    "privacySettings": {
+      "showPhone": true,
+      "showEmail": true,
+      "showCity": true
+    },
+    "onboardingCompleted": true,
+    "lastActiveAt": "2026-06-01T18:10:00-05:00",
+    "createdAt": "2025-01-12T10:00:00-05:00"
+  },
+  {
+    "uid": "u-leader",
+    "email": "lider@iglesia.com",
+    "displayName": "Andres Medina",
+    "role": "leader",
+    "phone": "+57 301 445 9988",
+    "city": "Medellin",
+    "country": "Colombia",
+    "birthDate": "1991-02-18",
+    "baptismDate": "2012-11-04",
+    "favoriteVerse": "Salmo 23:1",
+    "testimony": "Acompana una celula de jovenes profesionales.",
+    "ministry": [
+      "Grupos de vida",
+      "Jovenes"
+    ],
+    "groupIds": [
+      "g-central"
+    ],
+    "status": "active",
+    "spiritualStatus": "leader_in_training",
+    "privacySettings": {
+      "showPhone": true,
+      "showEmail": false,
+      "showCity": true
+    },
+    "onboardingCompleted": true,
+    "lastActiveAt": "2026-06-01T17:34:00-05:00",
+    "createdAt": "2025-02-19T10:00:00-05:00"
+  },
+  {
+    "uid": "u-member",
+    "email": "miembro@iglesia.com",
+    "displayName": "Laura Torres",
+    "role": "member",
+    "phone": "+57 302 887 9000",
+    "city": "Cali",
+    "country": "Colombia",
+    "birthDate": "1997-09-21",
+    "baptismDate": "2024-03-17",
+    "favoriteVerse": "Mateo 6:33",
+    "testimony": "Inicio su ruta de formacion espiritual este ano.",
+    "ministry": [
+      "Alabanza"
+    ],
+    "groupIds": [
+      "g-central"
+    ],
+    "leaderId": "u-leader",
+    "status": "active",
+    "spiritualStatus": "growing",
+    "privacySettings": {
+      "showPhone": false,
+      "showEmail": true,
+      "showCity": true
+    },
+    "onboardingCompleted": true,
+    "lastActiveAt": "2026-06-01T16:58:00-05:00",
+    "createdAt": "2025-09-04T10:00:00-05:00"
+  },
+  {
+    "uid": "u-pending",
+    "email": "nuevo@iglesia.com",
+    "displayName": "Daniel Ortiz",
+    "role": "member",
+    "phone": "+57 305 212 9001",
+    "city": "Barranquilla",
+    "country": "Colombia",
+    "ministry": [],
+    "groupIds": [],
+    "leaderId": "u-leader",
+    "status": "pending",
+    "spiritualStatus": "new_believer",
+    "privacySettings": {
+      "showPhone": false,
+      "showEmail": true,
+      "showCity": false
+    },
+    "onboardingCompleted": false,
+    "lastActiveAt": "2026-05-31T21:02:00-05:00",
+    "createdAt": "2026-05-31T21:02:00-05:00"
+  },
+  {
+    "uid": "u-inactive",
+    "email": "ana@iglesia.com",
+    "displayName": "Ana Salazar",
+    "role": "member",
+    "phone": "+57 310 456 3344",
+    "city": "Bogota",
+    "country": "Colombia",
+    "ministry": [
+      "Ninos"
+    ],
+    "groupIds": [
+      "g-central"
+    ],
+    "leaderId": "u-leader",
+    "status": "inactive",
+    "spiritualStatus": "established",
+    "privacySettings": {
+      "showPhone": true,
+      "showEmail": true,
+      "showCity": true
+    },
+    "onboardingCompleted": true,
+    "lastActiveAt": "2026-05-12T09:10:00-05:00",
+    "createdAt": "2024-04-21T10:00:00-05:00"
+  }
+];
+
+export const weeklyAttendance = [
+  {
+    "label": "Sem 1",
+    "value": 176
+  },
+  {
+    "label": "Sem 2",
+    "value": 188
+  },
+  {
+    "label": "Sem 3",
+    "value": 203
+  },
+  {
+    "label": "Sem 4",
+    "value": 219
+  },
+  {
+    "label": "Sem 5",
+    "value": 226
+  }
+];
+

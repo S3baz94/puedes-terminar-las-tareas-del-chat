@@ -15,7 +15,7 @@ import {
   mockNotifications,
   weeklyAttendance,
   formationSteps,
-} from '../src/constants/mockData.ts';
+} from './mockData.js';
 
 const isVercel = !!process.env.VERCEL;
 const dbPath = isVercel ? ':memory:' : path.resolve(process.cwd(), 'server/database.db');

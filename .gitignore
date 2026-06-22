@@ -12,3 +12,5 @@ dist
 server/database.db
 server/database.db-wal
 server/database.db-shm
+
+.vercel
