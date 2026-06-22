@@ -99,11 +99,15 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
   const [fund, setFund] = useState('offering');
   const [donationMessage, setDonationMessage] = useState<string | null>(null);
   const [isRecurring, setIsRecurring] = useState(false);
+  const [downloadingReceiptId, setDownloadingReceiptId] = useState<string | null>(null);
 
   // Bible state
   const [bibleSearchQuery, setBibleSearchQuery] = useState('');
   const [selectedBook, setSelectedBook] = useState<'Mateo' | 'Salmos' | 'Juan' | 'Génesis'>('Mateo');
   const [selectedChapter, setSelectedChapter] = useState<'6' | '23' | '3' | '1'>('6');
+  const [highlightedVerses, setHighlightedVerses] = useState<Record<string, string>>({});
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [audioProgress, setAudioProgress] = useState(0);
 
   // Devotional Note state
   const devotionals = useMemo(() => content.filter((item) => item.type === 'devotional'), [content]);
@@ -111,6 +115,7 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
   const selectedDevotional = devotionals.find((d) => d.id === selectedDevoId) || devotionals[0];
   const [devoNoteText, setDevoNoteText] = useState('');
   const [saveNoteStatus, setSaveNoteStatus] = useState<string | null>(null);
+  const [favoriteDevotionals, setFavoriteDevotionals] = useState<Record<string, boolean>>({});
 
   // Prayer state
   const [prayerTitle, setPrayerTitle] = useState('');
@@ -179,6 +184,25 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
       setDevoNoteText(devotionalNotes[selectedDevotional.id] || '');
     }
   }, [selectedDevotional?.id, devotionalNotes]);
+
+  // Audio player progress effect
+  useEffect(() => {
+    let interval: any;
+    if (isAudioPlaying) {
+      interval = setInterval(() => {
+        setAudioProgress((p) => {
+          if (p >= 100) {
+            setIsAudioPlaying(false);
+            return 0;
+          }
+          return p + 4;
+        });
+      }, 300);
+    } else {
+      setAudioProgress(0);
+    }
+    return () => clearInterval(interval);
+  }, [isAudioPlaying]);
 
   async function submitDonation(event: FormEvent) {
     event.preventDefault();
@@ -270,15 +294,22 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
 
   // Interactive buttons handlers
   function handleFavorite() {
-    alert('¡Agregado a tus favoritos! (Simulado)');
+    if (!selectedDevotional) return;
+    setFavoriteDevotionals((prev) => {
+      const next = !prev[selectedDevotional.id];
+      alert(next ? '¡Guardado en tus favoritos!' : 'Quitado de tus favoritos.');
+      return { ...prev, [selectedDevotional.id]: next };
+    });
   }
 
   function handleShare() {
-    alert('¡Enlace de compartir copiado al portapapeles! (Simulado)');
+    if (!selectedDevotional) return;
+    navigator.clipboard.writeText(window.location.href);
+    alert('¡Enlace de compartir copiado al portapapeles! 🔗');
   }
 
   function handlePlayAudio() {
-    alert(`Reproduciendo audio de ${selectedBook} ${selectedChapter} en versión RVR60 (simulado)... 🔊`);
+    setIsAudioPlaying((prev) => !prev);
   }
 
   async function handleSaveDevoNote() {
@@ -294,8 +325,12 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
     }
   }
 
-  function handleDownloadReceipt(fundName: string, donationAmount: number) {
-    alert(`Descargando comprobante:\n\nFondo: ${fundName}\nMonto: ${formatCurrency(donationAmount)} COP\n\n¡Archivo PDF simulado generado con éxito!`);
+  function handleDownloadReceipt(fundName: string, donationAmount: number, donationId: string) {
+    setDownloadingReceiptId(donationId);
+    setTimeout(() => {
+      setDownloadingReceiptId(null);
+      alert(`Comprobante generado:\n\nTransacción: ${donationId}\nFondo: ${fundName}\nMonto: ${formatCurrency(donationAmount)} COP\n\n¡Archivo PDF simulado generado y guardado con éxito!`);
+    }, 1500);
   }
 
   return (
@@ -312,12 +347,34 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
             <div className="space-y-4 text-base leading-8 text-ink">
               {(((BIBLE_BOOKS as any)[selectedBook] as any)[selectedChapter] || [])
                 .filter((verse: any) => verse.text.toLowerCase().includes(bibleSearchQuery.toLowerCase()))
-                .map((verse: any) => (
-                  <p className="rounded-lg border border-slate-200 bg-slate-50 p-4 animate-fade-in" key={verse.text}>
-                    <span className="mr-2 font-extrabold text-primary">{verse.num}</span>
-                    {verse.text}
-                  </p>
-                ))}
+                .map((verse: any) => {
+                  const key = `${selectedBook}-${selectedChapter}-${verse.num}`;
+                  const color = highlightedVerses[key];
+                  return (
+                    <p
+                      className="rounded-lg border border-slate-200 p-4 animate-fade-in cursor-pointer transition hover:bg-slate-100/50"
+                      key={verse.text}
+                      style={{ backgroundColor: color || undefined }}
+                      onClick={() => {
+                        if (selectedColor) {
+                          setHighlightedVerses((prev) => {
+                            if (prev[key] === selectedColor) {
+                              const next = { ...prev };
+                              delete next[key];
+                              return next;
+                            }
+                            return { ...prev, [key]: selectedColor };
+                          });
+                        } else {
+                          alert("Por favor selecciona un color de resaltador en el panel de herramientas a la derecha y luego haz clic en el versículo para colorear.");
+                        }
+                      }}
+                    >
+                      <span className="mr-2 font-extrabold text-primary">{verse.num}</span>
+                      {verse.text}
+                    </p>
+                  );
+                })}
               {bibleSearchQuery && (((BIBLE_BOOKS as any)[selectedBook] as any)[selectedChapter] || []).filter((verse: any) => verse.text.toLowerCase().includes(bibleSearchQuery.toLowerCase())).length === 0 ? (
                 <p className="text-center text-sm text-muted py-4">No se encontraron versículos coincidentes.</p>
               ) : null}
@@ -362,25 +419,42 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
                 value={bibleSearchQuery}
                 onChange={(e) => setBibleSearchQuery(e.currentTarget.value)}
               />
-              <div className="grid grid-cols-4 gap-2">
-                {['#FDE68A', '#BFDBFE', '#BBF7D0', '#FBCFE8'].map((color) => (
-                  <button
-                    aria-label={`Color ${color}`}
-                    className={`h-10 rounded-lg border-2 ${selectedColor === color ? 'border-indigo-600 scale-105' : 'border-slate-200'} transition-all`}
-                    key={color}
-                    onClick={() => {
-                      setSelectedColor(color);
-                      alert(`Versículo seleccionado resaltado con el color ${color} (simulación).`);
-                    }}
-                    style={{ backgroundColor: color }}
-                    title={`Color ${color}`}
-                    type="button"
-                  />
-                ))}
+              <div>
+                <span className="mb-2 block text-sm font-semibold text-ink">Resaltador (Selecciona color y haz clic en versículo)</span>
+                <div className="grid grid-cols-4 gap-2">
+                  {['#FDE68A', '#BFDBFE', '#BBF7D0', '#FBCFE8'].map((color) => (
+                    <button
+                      aria-label={`Color ${color}`}
+                      className={`h-10 rounded-lg border-2 ${selectedColor === color ? 'border-indigo-600 scale-105' : 'border-slate-200'} transition-all`}
+                      key={color}
+                      onClick={() => setSelectedColor(color)}
+                      style={{ backgroundColor: color }}
+                      title={`Color ${color}`}
+                      type="button"
+                    />
+                  ))}
+                </div>
               </div>
-              <Button className="w-full" icon={<Play className="h-4 w-4" />} variant="secondary" onClick={handlePlayAudio}>
-                Audio
+              <Button
+                className="w-full"
+                icon={<Play className="h-4 w-4" />}
+                variant={isAudioPlaying ? 'primary' : 'secondary'}
+                onClick={handlePlayAudio}
+              >
+                {isAudioPlaying ? 'Pausar Audio' : 'Escuchar Audio'}
               </Button>
+              {isAudioPlaying && (
+                <div className="mt-4 rounded-lg bg-indigo-50 p-3 border border-indigo-100 flex items-center justify-between gap-3 animate-fade-in">
+                  <span className="text-xs font-bold text-indigo-600 animate-pulse flex items-center gap-1.5">
+                    <Play className="h-3 w-3 fill-current" />
+                    Reproduciendo audio ({audioProgress}%)
+                  </span>
+                  <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                    <div className="h-full bg-primary transition-all duration-300" style={{ width: `${audioProgress}%` }} />
+                  </div>
+                  <Button size="sm" variant="ghost" onClick={() => setIsAudioPlaying(false)} className="text-xs text-danger font-bold">Detener</Button>
+                </div>
+              )}
             </div>
           </Card>
         </div>
@@ -392,8 +466,12 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
             <p className="text-xl font-semibold leading-9 text-ink">{selectedDevotional?.body}</p>
             <p className="mt-4 text-sm leading-6 text-muted">{selectedDevotional?.excerpt}</p>
             <div className="mt-6 flex flex-wrap gap-2">
-              <Button icon={<Heart className="h-4 w-4" />} variant="outline" onClick={handleFavorite}>
-                Favorito
+              <Button
+                icon={<Heart className={`h-4 w-4 ${selectedDevotional && favoriteDevotionals[selectedDevotional.id] ? 'fill-current text-red-500' : ''}`} />}
+                variant={selectedDevotional && favoriteDevotionals[selectedDevotional.id] ? 'primary' : 'outline'}
+                onClick={handleFavorite}
+              >
+                {selectedDevotional && favoriteDevotionals[selectedDevotional.id] ? 'Favorito' : 'Marcar Favorito'}
               </Button>
               <Button icon={<Send className="h-4 w-4" />} variant="secondary" onClick={handleShare}>
                 Compartir
@@ -603,8 +681,14 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
                     <p className="font-bold text-ink">{formatCurrency(donation.amount)}</p>
                     <p className="text-sm text-muted">{donation.fund}</p>
                   </div>
-                  <Button icon={<Download className="h-4 w-4" />} size="icon" variant="ghost" onClick={() => handleDownloadReceipt(donation.fund, donation.amount)}>
-                    Descargar
+                  <Button
+                    icon={downloadingReceiptId === donation.id ? undefined : <Download className="h-4 w-4" />}
+                    size={downloadingReceiptId === donation.id ? 'sm' : 'icon'}
+                    variant={downloadingReceiptId === donation.id ? 'secondary' : 'ghost'}
+                    onClick={() => handleDownloadReceipt(donation.fund, donation.amount, donation.id)}
+                    disabled={downloadingReceiptId !== null}
+                  >
+                    {downloadingReceiptId === donation.id ? 'Generando...' : 'Descargar'}
                   </Button>
                 </div>
               ))}
