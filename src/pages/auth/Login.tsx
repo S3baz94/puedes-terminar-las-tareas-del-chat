@@ -9,14 +9,11 @@ import { StatusPill } from '../../components/common/StatusPill';
 import { useAuth } from '../../hooks/useAuth';
 import { useAuthStore } from '../../store/authStore';
 
-const showDemoLogin = import.meta.env.VITE_SHOW_DEMO_LOGIN === 'true';
-const firstDemoCredential = demoCredentials[0];
-
 export function Login() {
   const navigate = useNavigate();
   const { user, login, status, error } = useAuth();
-  const [email, setEmail] = useState(showDemoLogin ? firstDemoCredential.email : '');
-  const [password, setPassword] = useState(showDemoLogin ? firstDemoCredential.password : '');
+  const [email, setEmail] = useState(demoCredentials[0].email);
+  const [password, setPassword] = useState(demoCredentials[0].password);
   const [localError, setLocalError] = useState<string | null>(null);
 
   if (user) {
@@ -79,28 +76,26 @@ export function Login() {
             </Button>
           </form>
 
-          {showDemoLogin ? (
-            <div className="mt-6 grid gap-3">
-              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-muted">Accesos de prueba</p>
-              {demoCredentials.map((credential) => (
-                <button
-                  className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left transition hover:border-primary hover:bg-white"
-                  key={credential.email}
-                  onClick={() => {
-                    setEmail(credential.email);
-                    setPassword(credential.password);
-                  }}
-                  type="button"
-                >
-                  <span>
-                    <span className="block text-sm font-bold text-ink">{credential.email}</span>
-                    <span className="text-xs font-medium text-muted">{credential.password}</span>
-                  </span>
-                  <StatusPill tone="primary">{roleLabels[credential.role]}</StatusPill>
-                </button>
-              ))}
-            </div>
-          ) : null}
+          <div className="mt-6 grid gap-3">
+            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-muted">Accesos de prueba</p>
+            {demoCredentials.map((credential) => (
+              <button
+                className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left transition hover:border-primary hover:bg-white hover:shadow-panel"
+                key={credential.email}
+                onClick={() => {
+                  setEmail(credential.email);
+                  setPassword(credential.password);
+                }}
+                type="button"
+              >
+                <span>
+                  <span className="block text-sm font-bold text-ink">{credential.email}</span>
+                  <span className="text-xs font-medium text-muted">{credential.password}</span>
+                </span>
+                <StatusPill tone="primary">{roleLabels[credential.role]}</StatusPill>
+              </button>
+            ))}
+          </div>
 
           <div className="mt-6 flex flex-wrap gap-3 text-sm font-semibold">
             <Link className="text-primary hover:text-indigo-700" to="/registro">

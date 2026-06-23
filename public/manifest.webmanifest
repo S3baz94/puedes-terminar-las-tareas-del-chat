@@ -31,9 +31,9 @@
       "url": "/shared/calendario"
     },
     {
-      "name": "Perfil",
-      "short_name": "Perfil",
-      "url": "/shared/perfil"
+      "name": "Alertas",
+      "short_name": "Alertas",
+      "url": "/shared/notificaciones"
     }
   ]
 }
