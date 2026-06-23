@@ -35,7 +35,7 @@ export function MemberHome() {
         <StatCard
           detail={`${prayerRequests[0]?.prayerCount ?? 0} personas orando`}
           icon={<HandHeart className="h-5 w-5" />}
-          label="Oracion"
+          label="Oración"
           tone="amber"
           value={String(prayerRequests.length)}
         />

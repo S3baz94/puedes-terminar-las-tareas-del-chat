@@ -24,8 +24,8 @@ export const allNavItems: NavItem[] = [
   // CATEGORÍA: VIDA ESPIRITUAL (CRECIMIENTO)
   { label: 'Devocional', to: '/member/devocional', icon: 'content', roles: ['member'], category: 'crecimiento' },
   { label: 'Biblia', to: '/member/biblia', icon: 'book', roles: ['member'], category: 'crecimiento' },
-  { label: 'Oracion', to: '/member/oracion', icon: 'prayer', roles: ['member'], category: 'crecimiento' },
-  { label: 'Oracion', to: '/leader/oracion', icon: 'prayer', roles: ['leader'], category: 'crecimiento' },
+  { label: 'Oración', to: '/member/oracion', icon: 'prayer', roles: ['member'], category: 'crecimiento' },
+  { label: 'Oración', to: '/leader/oracion', icon: 'prayer', roles: ['leader'], category: 'crecimiento' },
   { label: 'Recursos', to: '/leader/recursos', icon: 'library', roles: ['leader'], category: 'crecimiento' },
   { label: 'Dar / Ofrendar', to: '/member/dar', icon: 'finance', roles: ['member'], category: 'crecimiento' },
 
@@ -33,7 +33,7 @@ export const allNavItems: NavItem[] = [
   { label: 'Usuarios', to: '/admin/usuarios', icon: 'users', roles: ['super_admin', 'admin'], category: 'gestion' },
   { label: 'Contenido', to: '/admin/contenido', icon: 'content', roles: ['super_admin', 'admin'], category: 'gestion' },
   { label: 'Eventos', to: '/admin/eventos', icon: 'calendar', roles: ['super_admin', 'admin'], category: 'gestion' },
-  { label: 'Analiticas', to: '/admin/analiticas', icon: 'analytics', roles: ['super_admin', 'admin'], category: 'gestion' },
+  { label: 'Analíticas', to: '/admin/analiticas', icon: 'analytics', roles: ['super_admin', 'admin'], category: 'gestion' },
   { label: 'Finanzas', to: '/admin/finanzas', icon: 'finance', roles: ['super_admin', 'admin'], category: 'gestion' },
   { label: 'En vivo', to: '/admin/en-vivo', icon: 'live', roles: ['super_admin', 'admin'], category: 'gestion' },
   { label: 'Ajustes', to: '/admin/configuracion', icon: 'settings', roles: ['super_admin', 'admin'], category: 'gestion' },

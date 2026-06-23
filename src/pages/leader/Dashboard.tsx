@@ -40,7 +40,7 @@ export function LeaderDashboard() {
           value={group.meetingDay}
         />
         <StatCard
-          detail="Oracion del grupo"
+          detail="Oración del grupo"
           icon={<HandHeart className="h-5 w-5" />}
           label="Peticiones activas"
           tone="amber"

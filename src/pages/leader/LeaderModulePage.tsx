@@ -20,7 +20,7 @@ const moduleTitles: Record<LeaderModule, string> = {
   'mi-grupo': 'Mi grupo',
   pastoral: 'Seguimiento pastoral',
   reuniones: 'Reuniones',
-  oracion: 'Oracion del grupo',
+  oracion: 'Oración del grupo',
   recursos: 'Recursos',
   reportes: 'Reportes',
   perfil: 'Mi Perfil de Liderazgo',

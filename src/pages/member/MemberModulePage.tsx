@@ -65,7 +65,7 @@ export type MemberModule = 'biblia' | 'devocional' | 'oracion' | 'grupos' | 'en-
 const moduleTitles: Record<MemberModule, string> = {
   biblia: 'Biblia',
   devocional: 'Devocional',
-  oracion: 'Oracion',
+  oracion: 'Oración',
   grupos: 'Mis grupos',
   'en-vivo': 'En vivo y sermones',
   dar: 'Dar',

@@ -28,7 +28,7 @@ const moduleTitles: Record<AdminModule, string> = {
   usuarios: 'Usuarios',
   contenido: 'Contenido',
   eventos: 'Eventos',
-  analiticas: 'Analiticas',
+  analiticas: 'Analíticas',
   finanzas: 'Finanzas',
   'en-vivo': 'Transmision en vivo',
   configuracion: 'Configuracion',
