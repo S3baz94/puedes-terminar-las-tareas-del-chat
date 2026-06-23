@@ -1,20 +1,36 @@
 import { FormEvent, useState } from 'react';
-import { CalendarDays, Lock, Mail, MessageCircle, ShieldCheck } from 'lucide-react';
+import { CalendarDays, Lock, Mail, MessageCircle, ShieldCheck, User, Users } from 'lucide-react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { demoCredentials } from '../../constants/mockData';
+import { demoCredentials, type DemoCredential } from '../../constants/mockData';
 import { getHomePath, roleLabels } from '../../constants/roles';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { StatusPill } from '../../components/common/StatusPill';
 import { useAuth } from '../../hooks/useAuth';
 import { useAuthStore } from '../../store/authStore';
+import type { Role } from '../../types/models';
+
+const showProfileAccess = import.meta.env.VITE_SHOW_DEMO_LOGIN !== 'false';
+
+const roleDescriptions: Partial<Record<Role, string>> = {
+  admin: 'Gestiona usuarios, contenido, eventos y configuracion.',
+  leader: 'Da seguimiento a su grupo, reuniones y oracion.',
+  member: 'Consulta agenda, mensajes, devocional y perfil.',
+};
+
+const roleIconMap: Partial<Record<Role, typeof ShieldCheck>> = {
+  admin: ShieldCheck,
+  leader: Users,
+  member: User,
+};
 
 export function Login() {
   const navigate = useNavigate();
   const { user, login, status, error } = useAuth();
-  const [email, setEmail] = useState(demoCredentials[0].email);
-  const [password, setPassword] = useState(demoCredentials[0].password);
+  const [email, setEmail] = useState(showProfileAccess ? demoCredentials[0].email : '');
+  const [password, setPassword] = useState(showProfileAccess ? demoCredentials[0].password : '');
   const [localError, setLocalError] = useState<string | null>(null);
+  const [quickAccessRole, setQuickAccessRole] = useState<Role | null>(null);
 
   if (user) {
     return <Navigate replace to={getHomePath(user.role)} />;
@@ -30,6 +46,21 @@ export function Login() {
 
     setLocalError(null);
     const ok = await login(email, password);
+    if (ok) {
+      const loggedUser = useAuthStore.getState().user;
+      navigate(getHomePath(loggedUser?.role), { replace: true });
+    }
+  }
+
+  async function handleQuickAccess(credential: DemoCredential) {
+    setQuickAccessRole(credential.role);
+    setEmail(credential.email);
+    setPassword(credential.password);
+    setLocalError(null);
+
+    const ok = await login(credential.email, credential.password);
+    setQuickAccessRole(null);
+
     if (ok) {
       const loggedUser = useAuthStore.getState().user;
       navigate(getHomePath(loggedUser?.role), { replace: true });
@@ -76,26 +107,40 @@ export function Login() {
             </Button>
           </form>
 
-          <div className="mt-6 grid gap-3">
-            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-muted">Accesos de prueba</p>
-            {demoCredentials.map((credential) => (
-              <button
-                className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left transition hover:border-primary hover:bg-white hover:shadow-panel"
-                key={credential.email}
-                onClick={() => {
-                  setEmail(credential.email);
-                  setPassword(credential.password);
-                }}
-                type="button"
-              >
-                <span>
-                  <span className="block text-sm font-bold text-ink">{credential.email}</span>
-                  <span className="text-xs font-medium text-muted">{credential.password}</span>
-                </span>
-                <StatusPill tone="primary">{roleLabels[credential.role]}</StatusPill>
-              </button>
-            ))}
-          </div>
+          {showProfileAccess ? (
+            <div className="mt-6 grid gap-3">
+              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-muted">Entrar por perfil</p>
+              {demoCredentials.map((credential) => {
+                const Icon = roleIconMap[credential.role] ?? User;
+
+                return (
+                  <button
+                    className="flex min-h-[4.75rem] items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left transition hover:border-primary hover:bg-white hover:shadow-panel disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={status === 'loading'}
+                    key={credential.email}
+                    onClick={() => handleQuickAccess(credential)}
+                    type="button"
+                  >
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white text-primary shadow-panel">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-2">
+                        <span className="text-sm font-extrabold text-ink">{roleLabels[credential.role]}</span>
+                        <StatusPill tone="primary">Demo</StatusPill>
+                      </span>
+                      <span className="mt-1 block text-xs font-semibold leading-5 text-muted">
+                        {roleDescriptions[credential.role]}
+                      </span>
+                    </span>
+                    <span className="text-xs font-extrabold text-primary">
+                      {quickAccessRole === credential.role ? 'Entrando...' : 'Abrir'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
 
           <div className="mt-6 flex flex-wrap gap-3 text-sm font-semibold">
             <Link className="text-primary hover:text-indigo-700" to="/registro">
