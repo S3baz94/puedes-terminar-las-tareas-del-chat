@@ -18,7 +18,7 @@ const toneClass = {
 
 export function StatCard({ label, value, detail, icon, tone = 'indigo' }: StatCardProps) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-panel">
+    <section className="rounded-lg border border-white/70 bg-white/88 p-5 shadow-app backdrop-blur">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-muted">{label}</p>

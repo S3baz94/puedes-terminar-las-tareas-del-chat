@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { demoCredentials } from '../constants/mockData';
 import type { User, PrivacySettings } from '../types/models';
 import { useAppStore } from './appStore';
 

@@ -10,9 +10,9 @@ interface CardProps {
 
 export function Card({ title, eyebrow, action, children, className = '' }: CardProps) {
   return (
-    <section className={`rounded-xl border border-slate-200 bg-white shadow-panel ${className}`}>
+    <section className={`rounded-lg border border-white/70 bg-white/88 shadow-app backdrop-blur ${className}`}>
       {(title || eyebrow || action) && (
-        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100/80 px-5 py-4">
           <div>
             {eyebrow ? (
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted">{eyebrow}</p>

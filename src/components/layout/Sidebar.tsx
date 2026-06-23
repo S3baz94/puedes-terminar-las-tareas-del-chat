@@ -83,14 +83,15 @@ export function Sidebar() {
         onClick={closeSidebar}
       />
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-200 bg-white transition duration-200 lg:sticky lg:top-0 lg:h-screen ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-white/70 bg-white/90 shadow-app backdrop-blur-xl transition duration-200 lg:sticky lg:top-0 lg:h-screen lg:bg-white/72 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="flex h-16 items-center justify-between border-b border-slate-100 px-5">
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-muted">Portal</p>
-            <p className="text-lg font-extrabold text-ink">{organizationName}</p>
+        <div className="flex min-h-20 items-center justify-between border-b border-slate-100 px-5">
+          <div className="min-w-0">
+            <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-muted">App</p>
+            <p className="truncate text-lg font-black text-ink">{organizationName}</p>
+            <p className="mt-0.5 text-xs font-semibold text-muted">{roleLabels[user.role]}</p>
           </div>
           <button
             aria-label="Cerrar menu"
@@ -135,10 +136,10 @@ function NavSection({
             <NavLink
               className={({ isActive }) =>
                 [
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition',
+                  'flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold transition',
                   isActive
-                    ? 'bg-ink text-white shadow-panel'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-ink',
+                    ? 'bg-ink text-white shadow-soft'
+                    : 'text-slate-600 hover:bg-white hover:text-ink hover:shadow-panel',
                 ].join(' ')
               }
               end={item.to === '/admin' || item.to === '/leader' || item.to === '/member'}

@@ -15,7 +15,7 @@ const variantClass: Record<ButtonVariant, string> = {
   primary: 'bg-primary text-white hover:bg-indigo-700 border-transparent',
   secondary: 'bg-ink text-white hover:bg-slate-900 border-transparent',
   outline: 'bg-white text-ink border-slate-200 hover:border-primary hover:text-primary',
-  ghost: 'bg-transparent text-muted border-transparent hover:bg-slate-100 hover:text-ink',
+  ghost: 'bg-transparent text-muted border-transparent hover:bg-white hover:text-ink',
   danger: 'bg-danger text-white hover:bg-red-600 border-transparent',
   success: 'bg-success text-white hover:bg-emerald-600 border-transparent',
 };
@@ -42,7 +42,7 @@ export function Button({
   return (
     <button
       className={[
-        'inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border font-semibold shadow-panel transition duration-150 disabled:cursor-not-allowed disabled:opacity-60',
+        'inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border font-semibold shadow-panel transition duration-150 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0',
         variantClass[variant],
         sizeClass[size],
         className,

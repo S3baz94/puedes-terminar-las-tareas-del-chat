@@ -32,9 +32,7 @@ export function AdminQuickActions() {
         icon={<Users className="h-4 w-4" />}
         variant="secondary"
         onClick={() => {
-          const el = document.querySelector('section, .card');
-          // Try to find the registrations card to scroll to
-          const cards = document.querySelectorAll('.rounded-2xl');
+          const cards = document.querySelectorAll('section');
           cards.forEach((card) => {
             if (card.textContent?.includes('Registros pendientes')) {
               card.scrollIntoView({ behavior: 'smooth' });

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Congregacion Digital</title>
+  <desc id="desc">Icono de aplicacion con una casa y una cruz.</desc>
+  <rect width="512" height="512" rx="112" fill="#4F46E5"/>
+  <circle cx="390" cy="126" r="54" fill="#F8C24E"/>
+  <path d="M118 257 256 142l138 115v155a24 24 0 0 1-24 24H142a24 24 0 0 1-24-24V257Z" fill="#FFFFFF"/>
+  <path d="M256 142 118 257v38l138-115 138 115v-38L256 142Z" fill="#DDE7FF"/>
+  <path d="M242 234h28v132h-28z" fill="#4F46E5"/>
+  <path d="M198 281h116v28H198z" fill="#4F46E5"/>
+  <path d="M157 401h198" stroke="#C8D3F4" stroke-width="18" stroke-linecap="round"/>
+</svg>

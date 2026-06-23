@@ -10,6 +10,7 @@ import { FormationProgress } from '../../components/member/FormationProgress';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppStore } from '../../store/appStore';
+import { useToastStore } from '../../store/toastStore';
 import { formatCurrency, formatDateTime } from '../../utils/format';
 
 const spiritualStatusLabels: Record<string, string> = {
@@ -74,6 +75,7 @@ const moduleTitles: Record<MemberModule, string> = {
 
 export function MemberModulePage({ module }: { module: MemberModule }) {
   const { user } = useAuth();
+  const notify = useToastStore((state) => state.notify);
 
   // Zustand values
   const prayerRequests = useAppStore((state) => state.prayerRequests);
@@ -222,7 +224,8 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
       isRecurring: isRecurring,
     });
 
-    setDonationMessage('¡Donación registrada con éxito en el historial demo!');
+    setDonationMessage('¡Donación registrada con éxito!');
+    notify({ title: 'Donacion registrada', description: `${formatCurrency(parsed)} COP`, tone: 'success' });
     setTimeout(() => setDonationMessage(null), 3000);
   }
 
@@ -297,15 +300,23 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
     if (!selectedDevotional) return;
     setFavoriteDevotionals((prev) => {
       const next = !prev[selectedDevotional.id];
-      alert(next ? '¡Guardado en tus favoritos!' : 'Quitado de tus favoritos.');
+      notify({
+        title: next ? 'Guardado en favoritos' : 'Quitado de favoritos',
+        description: selectedDevotional.title,
+        tone: next ? 'success' : 'info',
+      });
       return { ...prev, [selectedDevotional.id]: next };
     });
   }
 
-  function handleShare() {
+  async function handleShare() {
     if (!selectedDevotional) return;
-    navigator.clipboard.writeText(window.location.href);
-    alert('¡Enlace de compartir copiado al portapapeles! 🔗');
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      notify({ title: 'Enlace copiado', description: 'Ya puedes compartir este devocional.', tone: 'success' });
+    } catch (err) {
+      notify({ title: 'No se pudo copiar', description: 'Copia el enlace desde la barra del navegador.', tone: 'warning' });
+    }
   }
 
   function handlePlayAudio() {
@@ -329,7 +340,11 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
     setDownloadingReceiptId(donationId);
     setTimeout(() => {
       setDownloadingReceiptId(null);
-      alert(`Comprobante generado:\n\nTransacción: ${donationId}\nFondo: ${fundName}\nMonto: ${formatCurrency(donationAmount)} COP\n\n¡Archivo PDF simulado generado y guardado con éxito!`);
+      notify({
+        title: 'Comprobante preparado',
+        description: `${fundName} · ${formatCurrency(donationAmount)} COP · ${donationId}`,
+        tone: 'success',
+      });
     }, 1500);
   }
 
@@ -340,7 +355,7 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
       {module === 'biblia' ? (
         <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
           <Card
-            action={<Button icon={<Search className="h-4 w-4" />} variant="outline" onClick={() => alert(`Búsqueda para "${bibleSearchQuery}" completada (simulado).`)}>Buscar</Button>}
+            action={<Button icon={<Search className="h-4 w-4" />} variant="outline" onClick={() => notify({ title: 'Busqueda aplicada', description: bibleSearchQuery || 'Mostrando todos los versiculos.', tone: 'info' })}>Buscar</Button>}
             eyebrow="RVR60"
             title={`${selectedBook} ${selectedChapter}`}
           >
@@ -366,7 +381,7 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
                             return { ...prev, [key]: selectedColor };
                           });
                         } else {
-                          alert("Por favor selecciona un color de resaltador en el panel de herramientas a la derecha y luego haz clic en el versículo para colorear.");
+                          notify({ title: 'Elige un color', description: 'Selecciona un resaltador antes de marcar el versiculo.', tone: 'warning' });
                         }
                       }}
                     >
@@ -595,7 +610,11 @@ export function MemberModulePage({ module }: { module: MemberModule }) {
                     variant={isRSVP ? 'primary' : 'outline'}
                     onClick={() => {
                       user && toggleRSVP(myEvent.id, user.uid);
-                      alert(isRSVP ? 'Inscripción cancelada.' : '¡Inscripción registrada con éxito para la reunión!');
+                      notify({
+                        title: isRSVP ? 'Inscripcion cancelada' : 'Inscripcion registrada',
+                        description: myEvent.title,
+                        tone: isRSVP ? 'info' : 'success',
+                      });
                     }}
                   >
                     {isRSVP ? 'Inscrito (Cancelar)' : 'RSVP'}

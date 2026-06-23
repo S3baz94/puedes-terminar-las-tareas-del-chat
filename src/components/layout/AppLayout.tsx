@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
+import { MobileDock } from './MobileDock';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { useAppStore } from '../../store/appStore';
@@ -25,9 +26,12 @@ export function AppLayout() {
       <Sidebar />
       <div className="min-w-0">
         <TopBar />
-        <main className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 lg:py-8">
-          <Outlet />
+        <main className="mx-auto w-full max-w-7xl px-4 pb-28 pt-5 md:px-6 lg:px-8 lg:pb-10 lg:pt-8">
+          <div className="app-content">
+            <Outlet />
+          </div>
         </main>
+        <MobileDock />
       </div>
     </div>
   );

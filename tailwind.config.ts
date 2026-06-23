@@ -19,11 +19,13 @@ export default {
         olive: '#6F7D4C',
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Nunito Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Fraunces', 'Georgia', 'serif'],
       },
       boxShadow: {
         soft: '0 18px 50px rgba(24, 32, 50, 0.08)',
         panel: '0 1px 2px rgba(17, 24, 39, 0.06)',
+        app: '0 22px 70px rgba(24, 32, 50, 0.12)',
       },
       backgroundImage: {
         'paper-grid':

@@ -11,6 +11,7 @@ import { UserAvatar } from '../../components/common/UserAvatar';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppStore } from '../../store/appStore';
+import { useToastStore } from '../../store/toastStore';
 import type { PastoralNote, PrayerRequest, User as ModelUser } from '../../types/models';
 import { formatDateTime, formatShortDate, statusTone } from '../../utils/format';
 
@@ -44,6 +45,7 @@ const predefinedAvatars = [
 
 export function LeaderModulePage({ module }: { module: LeaderModule }) {
   const { user } = useAuth();
+  const notify = useToastStore((state) => state.notify);
 
   // Zustand stores
   const users = useAppStore((state) => state.users);
@@ -237,7 +239,11 @@ export function LeaderModulePage({ module }: { module: LeaderModule }) {
   }
 
   function handleGenerateReport() {
-    alert('Reporte generado:\nAsistencia del grupo: 72%\nPeticiones activas: ' + prayerRequests.length + '\nMiembros inactivos: 1');
+    notify({
+      title: 'Reporte preparado',
+      description: `Asistencia 72% · Peticiones activas ${prayerRequests.length} · Miembros inactivos 1`,
+      tone: 'success',
+    });
   }
 
   async function handleScheduleMeeting(event: FormEvent) {
@@ -297,7 +303,11 @@ export function LeaderModulePage({ module }: { module: LeaderModule }) {
         el.scrollIntoView({ behavior: 'smooth' });
       }
     } else {
-      alert('Registra contacto, asistencia u oraciones en los paneles interactivos.');
+      notify({
+        title: 'Accion disponible',
+        description: 'Registra contacto, asistencia u oraciones desde los paneles de esta seccion.',
+        tone: 'info',
+      });
     }
   }
 
@@ -598,7 +608,11 @@ export function LeaderModulePage({ module }: { module: LeaderModule }) {
             <Card key={resource} title={resource}>
               <div className="flex items-center justify-between">
                 <FileText className="h-8 w-8 text-primary" />
-                <Button size="sm" variant="outline" onClick={() => alert('Abriendo el recurso: ' + resource)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => notify({ title: 'Recurso seleccionado', description: resource, tone: 'info' })}
+                >
                   Abrir
                 </Button>
               </div>

@@ -9,6 +9,7 @@ import { Toggle } from '../../components/common/Toggle';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppStore } from '../../store/appStore';
+import { useToastStore } from '../../store/toastStore';
 import { roleLabels } from '../../constants/roles';
 import { hasFirebaseConfig } from '../../services/firebase';
 import { hasStripeConfig } from '../../services/stripe';
@@ -60,6 +61,7 @@ const integrationStatuses = [
 
 export function AdminModulePage({ module }: { module: AdminModule }) {
   const { user } = useAuth();
+  const notify = useToastStore((state) => state.notify);
 
   // Zustand values
   const users = useAppStore((state) => state.users);
@@ -165,7 +167,7 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
       streamUrl: liveUrl,
       scheduledAt: liveDate,
     });
-    alert('Culto programado con éxito.');
+    notify({ title: 'Transmision guardada', description: 'La programacion del culto se actualizo correctamente.', tone: 'success' });
   }
 
   // Analytics helper data
@@ -231,6 +233,7 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
     setContentRef('');
     setContentBody('');
     setContentMessage('¡Contenido publicado con éxito!');
+    notify({ title: 'Contenido publicado', description: contentTitle, tone: 'success' });
     setTimeout(() => setContentMessage(null), 3000);
   }
 
@@ -255,6 +258,7 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
     setEventDate('');
     setEventDesc('');
     setEventMessage('¡Evento creado con éxito!');
+    notify({ title: 'Evento creado', description: eventTitle, tone: 'success' });
     setTimeout(() => setEventMessage(null), 3000);
   }
 
@@ -263,6 +267,7 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
     if (!orgNameInput.trim()) return;
     updateOrganizationName(orgNameInput);
     setOrgMessage('¡Configuración guardada!');
+    notify({ title: 'Configuracion guardada', description: 'El nombre publico se actualizo.', tone: 'success' });
     setTimeout(() => setOrgMessage(null), 3000);
   }
 
@@ -271,7 +276,7 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
 
   // Navigation / Filter / Action triggers
   function handleFilters() {
-    alert('Filtros avanzados activos. Puedes buscar y filtrar por ciudad, fecha o rol en esta demo interactiva.');
+    notify({ title: 'Filtros disponibles', description: 'Usa la busqueda visible para encontrar personas por nombre, correo o ciudad.', tone: 'info' });
   }
 
   function handleCreateClick() {
@@ -288,21 +293,27 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
         el.scrollIntoView({ behavior: 'smooth' });
       }
     } else {
-      alert('Formulario de creación rápida disponible en el menú lateral de cada sección.');
+      notify({ title: 'Crear desde la seccion', description: 'Abre Contenido o Eventos para usar el formulario rapido.', tone: 'info' });
     }
   }
 
   function handleCSVImport() {
-    const name = prompt('Ingresa el nombre del miembro a importar por CSV simulado:');
-    if (!name || !name.trim()) return;
-    alert(`¡Miembro "${name}" importado con éxito desde CSV!`);
+    notify({
+      title: 'Importacion pendiente',
+      description: 'La carga real de CSV debe conectarse antes de usarla con datos de la congregacion.',
+      tone: 'warning',
+    });
   }
 
   function handlePreview() {
     if (content.length > 0) {
-      alert(`Vista Previa del último contenido publicado:\n\nTítulo: ${content[0].title}\nCuerpo: ${content[0].body}\nReferencia: ${content[0].bibleReference || 'Ninguna'}`);
+      notify({
+        title: content[0].title,
+        description: content[0].excerpt || content[0].body.slice(0, 120),
+        tone: 'info',
+      });
     } else {
-      alert('No hay contenido publicado para previsualizar.');
+      notify({ title: 'Sin contenido', description: 'Publica un contenido antes de abrir la vista previa.', tone: 'warning' });
     }
   }
 
