@@ -50,6 +50,13 @@ export const useAuthStore = create<AuthState>()(
             },
             body: JSON.stringify({ email, password }),
           });
+          const contentType = res.headers.get('content-type');
+          const isJson = contentType && contentType.includes('application/json');
+          if (!isJson) {
+            const text = await res.text();
+            set({ status: 'error', error: text || `Error de servidor (${res.status})` });
+            return false;
+          }
           const data = await res.json();
           if (res.ok && data.success) {
             set({
@@ -85,6 +92,11 @@ export const useAuthStore = create<AuthState>()(
             },
             body: JSON.stringify(details),
           });
+          const contentType = res.headers.get('content-type');
+          const isJson = contentType && contentType.includes('application/json');
+          if (!isJson) {
+            return false;
+          }
           const data = await res.json();
           if (res.ok && data.success) {
             set({ user: data.user });

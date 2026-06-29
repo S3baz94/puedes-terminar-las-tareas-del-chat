@@ -131,32 +131,35 @@ export const useAppStore = create<AppState>()(
             return;
           }
           if (res.ok) {
-            const data = await res.json();
-            set({
-              users: data.users || [],
-              groups: data.groups || [],
-              content: data.content || [],
-              prayerRequests: data.prayerRequests || [],
-              events: data.events || [],
-              pastoralNotes: data.pastoralNotes || [],
-              donations: data.donations || [],
-              messages: data.messages || [],
-              liveStream: data.liveStream || {
-                id: '',
-                title: '',
-                platform: 'youtube',
-                streamUrl: '',
-                chatEnabled: false,
-                offeringEnabled: false,
-                status: 'scheduled',
-                viewerCount: 0,
-                scheduledAt: '',
-                createdAt: '',
-              },
-              notifications: data.notifications || [],
-              organizationName: data.organizationName || 'Los Invisibles de Jesus',
-              themeColor: data.themeColor || '#4F46E5',
-            });
+            const contentType = res.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              const data = await res.json();
+              set({
+                users: data.users || [],
+                groups: data.groups || [],
+                content: data.content || [],
+                prayerRequests: data.prayerRequests || [],
+                events: data.events || [],
+                pastoralNotes: data.pastoralNotes || [],
+                donations: data.donations || [],
+                messages: data.messages || [],
+                liveStream: data.liveStream || {
+                  id: '',
+                  title: '',
+                  platform: 'youtube',
+                  streamUrl: '',
+                  chatEnabled: false,
+                  offeringEnabled: false,
+                  status: 'scheduled',
+                  viewerCount: 0,
+                  scheduledAt: '',
+                  createdAt: '',
+                },
+                notifications: data.notifications || [],
+                organizationName: data.organizationName || 'Los Invisibles de Jesus',
+                themeColor: data.themeColor || '#4F46E5',
+              });
+            }
           }
         } catch (err) {
           console.error('Error during bootstrap:', err);
