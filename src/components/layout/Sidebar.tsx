@@ -83,7 +83,7 @@ export function Sidebar() {
         onClick={closeSidebar}
       />
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-white/70 bg-white/90 shadow-app backdrop-blur-xl transition duration-200 lg:sticky lg:top-0 lg:h-screen lg:bg-white/72 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-white/70 bg-white/90 shadow-app backdrop-blur-xl transition duration-200 lg:sticky lg:top-0 lg:h-screen lg:bg-white/92 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >

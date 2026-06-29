@@ -1,4 +1,4 @@
-const CACHE_NAME = 'congregacion-digital-ready-v1';
+const CACHE_NAME = 'congregacion-digital-ready-__BUILD_VERSION__';
 const APP_SHELL = ['/', '/index.html', '/offline.html', '/pwa-icon.svg'];
 
 self.addEventListener('install', (event) => {

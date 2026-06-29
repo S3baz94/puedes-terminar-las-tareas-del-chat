@@ -376,7 +376,8 @@ export const mockUsers = [
     },
     "onboardingCompleted": true,
     "lastActiveAt": "2026-06-01T18:10:00-05:00",
-    "createdAt": "2025-01-12T10:00:00-05:00"
+    "createdAt": "2025-01-12T10:00:00-05:00",
+    "passwordHash": "$2b$10$A0zoVOn24eK3rt1NzYZDVe6XWJS7LZ6t1wT/Wm2EMIljVyI0IXpTi"
   },
   {
     "uid": "u-leader",
@@ -406,7 +407,8 @@ export const mockUsers = [
     },
     "onboardingCompleted": true,
     "lastActiveAt": "2026-06-01T17:34:00-05:00",
-    "createdAt": "2025-02-19T10:00:00-05:00"
+    "createdAt": "2025-02-19T10:00:00-05:00",
+    "passwordHash": "$2b$10$oyQ7WbxwBCV441LvXoGm9uKjvWnaL0lj2dbzCCGhZi3NRZAJaMgDC"
   },
   {
     "uid": "u-member",
@@ -436,7 +438,8 @@ export const mockUsers = [
     },
     "onboardingCompleted": true,
     "lastActiveAt": "2026-06-01T16:58:00-05:00",
-    "createdAt": "2025-09-04T10:00:00-05:00"
+    "createdAt": "2025-09-04T10:00:00-05:00",
+    "passwordHash": "$2b$10$wuH6Y4hLBcL7/oYFfoKhkeHCCfCMJPRBuuEA/o/2jIIlnu5EKlst6"
   },
   {
     "uid": "u-pending",
@@ -458,7 +461,8 @@ export const mockUsers = [
     },
     "onboardingCompleted": false,
     "lastActiveAt": "2026-05-31T21:02:00-05:00",
-    "createdAt": "2026-05-31T21:02:00-05:00"
+    "createdAt": "2026-05-31T21:02:00-05:00",
+    "passwordHash": "$2b$10$xBYuA0aXKm6lgVAa.zunM.nt6slO0V0Hfhqm.40MK8YijxAi/gOaG"
   },
   {
     "uid": "u-inactive",
@@ -484,7 +488,8 @@ export const mockUsers = [
     },
     "onboardingCompleted": true,
     "lastActiveAt": "2026-05-12T09:10:00-05:00",
-    "createdAt": "2024-04-21T10:00:00-05:00"
+    "createdAt": "2024-04-21T10:00:00-05:00",
+    "passwordHash": "$2b$10$xBYuA0aXKm6lgVAa.zunM.nt6slO0V0Hfhqm.40MK8YijxAi/gOaG"
   }
 ];
 

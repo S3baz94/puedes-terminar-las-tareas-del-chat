@@ -6,6 +6,7 @@ export default {
     extend: {
       colors: {
         primary: 'var(--color-primary, #4F46E5)',
+        'primary-text': 'var(--color-primary-text, #ffffff)',
         secondary: '#7C3AED',
         success: '#10B981',
         warning: '#F59E0B',
@@ -13,7 +14,7 @@ export default {
         background: '#F9FAFB',
         surface: '#FFFFFF',
         text: '#111827',
-        muted: '#6B7280',
+        muted: '#5E6775',
         ink: '#182032',
         linen: '#F7F4EC',
         olive: '#6F7D4C',

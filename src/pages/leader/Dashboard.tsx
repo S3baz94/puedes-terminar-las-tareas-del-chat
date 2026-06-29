@@ -6,10 +6,20 @@ import { StatusPill } from '../../components/common/StatusPill';
 import { UserAvatar } from '../../components/common/UserAvatar';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { useAppStore } from '../../store/appStore';
+import { useShallow } from 'zustand/react/shallow';
 import { formatDateTime, formatShortDate } from '../../utils/format';
 
 export function LeaderDashboard() {
-  const { groups, users, events, prayerRequests, pastoralNotes, toggleAttendance } = useAppStore();
+  const { groups, users, events, prayerRequests, pastoralNotes, toggleAttendance } = useAppStore(
+    useShallow((state) => ({
+      groups: state.groups,
+      users: state.users,
+      events: state.events,
+      prayerRequests: state.prayerRequests,
+      pastoralNotes: state.pastoralNotes,
+      toggleAttendance: state.toggleAttendance,
+    }))
+  );
   const group = groups[0];
   const members = users.filter((user) => group.memberIds.includes(user.uid));
   const inactiveMembers = members.filter((member) => member.status === 'inactive');
@@ -24,7 +34,7 @@ export function LeaderDashboard() {
         title={group.name}
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           detail={`${group.memberIds.length}/${group.maxCapacity} cupos ocupados`}
           icon={<Users className="h-5 w-5" />}
@@ -55,7 +65,7 @@ export function LeaderDashboard() {
         />
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_0.9fr]">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_0.9fr]">
         <Card eyebrow="Asistencia" title="Reunion de esta semana">
           <div className="space-y-3">
             {nextMeeting ? (

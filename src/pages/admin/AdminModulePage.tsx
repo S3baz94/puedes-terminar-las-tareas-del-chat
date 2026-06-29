@@ -1,6 +1,7 @@
 import { useMemo, useState, FormEvent, useEffect } from 'react';
 import { Eye, Filter, Plus, Save, Search, Upload, Trash2 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
+import { ProfileSettings } from '../../components/shared/ProfileSettings';
 import { Card } from '../../components/common/Card';
 import { DataTable, type Column } from '../../components/common/DataTable';
 import { Input } from '../../components/common/Input';
@@ -13,7 +14,7 @@ import { useToastStore } from '../../store/toastStore';
 import { roleLabels } from '../../constants/roles';
 import { hasFirebaseConfig } from '../../services/firebase';
 import { hasStripeConfig } from '../../services/stripe';
-import type { Content, Donation, Event, User } from '../../types/models';
+import type { Content, Donation, Event, User, ContentType, StreamPlatform, Role } from '../../types/models';
 import { formatCurrency, formatDateTime, statusTone } from '../../utils/format';
 
 export type AdminModule =
@@ -23,7 +24,8 @@ export type AdminModule =
   | 'analiticas'
   | 'finanzas'
   | 'en-vivo'
-  | 'configuracion';
+  | 'configuracion'
+  | 'perfil';
 
 const moduleTitles: Record<AdminModule, string> = {
   usuarios: 'Usuarios',
@@ -33,6 +35,15 @@ const moduleTitles: Record<AdminModule, string> = {
   finanzas: 'Finanzas',
   'en-vivo': 'Transmision en vivo',
   configuracion: 'Configuracion',
+  perfil: 'Mi Perfil',
+};
+
+const colorNames: Record<string, string> = {
+  '#4F46E5': 'Índigo',
+  '#7C3AED': 'Púrpura',
+  '#10B981': 'Verde',
+  '#F59E0B': 'Amarillo',
+  '#EF4444': 'Rojo',
 };
 
 // userColumns removed from outer scope and moved inside the component body dynamically
@@ -92,7 +103,7 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
       accessor: (row) => (
         <select
           value={row.role}
-          onChange={(e) => changeUserRole(row.uid, e.target.value)}
+          onChange={(e) => changeUserRole(row.uid, e.target.value as Role)}
           className="rounded border border-slate-200 bg-white p-1 text-xs text-ink"
         >
           {Object.entries(roleLabels).map(([role, label]) => (
@@ -146,7 +157,7 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
 
   // Livestream form state
   const [liveTitle, setLiveTitle] = useState(liveStream?.title || '');
-  const [livePlatform, setLivePlatform] = useState<'youtube' | 'facebook' | 'internal'>(liveStream?.platform || 'youtube');
+  const [livePlatform, setLivePlatform] = useState<StreamPlatform>(liveStream?.platform || 'youtube');
   const [liveUrl, setLiveUrl] = useState(liveStream?.streamUrl || '');
   const [liveDate, setLiveDate] = useState(liveStream?.scheduledAt || '');
 
@@ -195,7 +206,7 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
   const [contentTitle, setContentTitle] = useState('');
   const [contentRef, setContentRef] = useState('');
   const [contentBody, setContentBody] = useState('');
-  const [contentType, setContentType] = useState<'devotional' | 'sermon' | 'announcement' | 'post'>('announcement');
+  const [contentType, setContentType] = useState<ContentType>('announcement');
   const [contentMessage, setContentMessage] = useState<string | null>(null);
 
   // Event form state
@@ -297,13 +308,7 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
     }
   }
 
-  function handleCSVImport() {
-    notify({
-      title: 'Importacion pendiente',
-      description: 'La carga real de CSV debe conectarse antes de usarla con datos de la congregacion.',
-      tone: 'warning',
-    });
-  }
+
 
   function handlePreview() {
     if (content.length > 0) {
@@ -321,21 +326,23 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
     <div>
       <PageHeader
         action={
-          <div className="flex flex-wrap gap-2">
-            <Button icon={<Filter className="h-4 w-4" />} variant="outline" onClick={handleFilters}>
-              Filtros
-            </Button>
-            <Button icon={<Plus className="h-4 w-4" />} onClick={handleCreateClick}>Crear</Button>
-          </div>
+          module !== 'perfil' ? (
+            <div className="flex flex-wrap gap-2">
+              <Button icon={<Filter className="h-4 w-4" />} variant="outline" onClick={handleFilters}>
+                Filtros
+              </Button>
+              <Button icon={<Plus className="h-4 w-4" />} onClick={handleCreateClick}>Crear</Button>
+            </div>
+          ) : undefined
         }
         eyebrow="Administracion"
         title={title}
       />
 
       {module === 'usuarios' ? (
-        <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
+        <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
           <Card
-            action={<Button icon={<Upload className="h-4 w-4" />} variant="outline" onClick={handleCSVImport}>CSV</Button>}
+            action={<Button icon={<Upload className="h-4 w-4" />} variant="outline" disabled={true}>CSV (Próximamente)</Button>}
             title="Directorio interno"
           >
             <div className="mb-4 max-w-md">
@@ -367,7 +374,7 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
       ) : null}
 
       {module === 'contenido' ? (
-        <div className="grid gap-6 xl:grid-cols-[1fr_24rem]">
+        <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
           <Card
             action={<Button icon={<Eye className="h-4 w-4" />} variant="outline" onClick={handlePreview}>Vista previa</Button>}
             title="Editor y publicaciones"
@@ -412,7 +419,7 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
                 <select
                   className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm shadow-panel"
                   value={contentType}
-                  onChange={(e) => setContentType(e.target.value as any)}
+                  onChange={(e) => setContentType(e.target.value as ContentType)}
                 >
                   <option value="announcement">Anuncio</option>
                   <option value="devotional">Devocional</option>
@@ -438,7 +445,7 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
       ) : null}
 
       {module === 'eventos' ? (
-        <div className="grid gap-6 xl:grid-cols-[1fr_24rem]">
+        <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
           <Card title="Calendario y lista">
             <DataTable columns={eventColumns} data={events} getRowKey={(row) => row.id} />
           </Card>
@@ -507,7 +514,7 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
       ) : null}
 
       {module === 'finanzas' ? (
-        <div className="grid gap-6 xl:grid-cols-[1fr_24rem]">
+        <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
           <Card title="Transacciones">
             <DataTable columns={donationColumns} data={donations} getRowKey={(row) => row.id} />
           </Card>
@@ -556,7 +563,7 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
                 <select
                   className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm shadow-panel"
                   value={livePlatform}
-                  onChange={(e) => setLivePlatform(e.target.value as any)}
+                  onChange={(e) => setLivePlatform(e.target.value as StreamPlatform)}
                 >
                   <option value="youtube">YouTube</option>
                   <option value="facebook">Facebook</option>
@@ -595,6 +602,8 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
                     key={color}
                     type="button"
                     style={{ background: color }}
+                    aria-label={`Tema color ${colorNames[color] || color}`}
+                    aria-pressed={themeColor === color}
                     className={`h-12 rounded-lg border-2 transition-all ${
                       themeColor === color ? 'border-ink scale-105 shadow-md ring-2 ring-primary/20' : 'border-slate-200 hover:scale-102'
                     }`}
@@ -621,6 +630,10 @@ export function AdminModulePage({ module }: { module: AdminModule }) {
             </div>
           </Card>
         </div>
+      ) : null}
+
+      {module === 'perfil' ? (
+        <ProfileSettings />
       ) : null}
     </div>
   );

@@ -66,7 +66,7 @@ export function SharedModulePage({ module }: { module: SharedModule }) {
       <PageHeader eyebrow="Compartido" title={titles[module]} />
 
       {module === 'mensajes' ? (
-        <div className="grid gap-6 xl:grid-cols-[20rem_1fr]">
+        <div className="grid gap-6 lg:grid-cols-[20rem_1fr]">
           <Card title="Conversaciones">
             <div className="space-y-3">
               {Object.entries(conversationNames).map(([id, name]) => (
@@ -130,7 +130,7 @@ export function SharedModulePage({ module }: { module: SharedModule }) {
       ) : null}
 
       {module === 'calendario' ? (
-        <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
+        <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
           <Card title="Vista mensual">
             <div className="grid grid-cols-7 gap-2">
               {Array.from({ length: 35 }, (_, index) => (
@@ -171,7 +171,7 @@ export function SharedModulePage({ module }: { module: SharedModule }) {
               onChange={(e) => setDirectoryQuery(e.currentTarget.value)}
             />
           </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {users
               .filter((item) => item.privacySettings.showEmail || item.privacySettings.showCity)
               .filter((item) => {
@@ -204,7 +204,7 @@ export function SharedModulePage({ module }: { module: SharedModule }) {
       ) : null}
 
       {module === 'testimonios' ? (
-        <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
+        <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
           <Card title="Feed">
             <div className="space-y-4">
               {users

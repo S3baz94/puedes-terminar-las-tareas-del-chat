@@ -20,7 +20,7 @@ export function UserAvatar({ name, src, size = 'md' }: UserAvatarProps) {
     .toUpperCase();
 
   if (src) {
-    return <img alt="" className={`${sizeClass[size]} rounded-full object-cover`} src={src} />;
+    return <img alt={name} className={`${sizeClass[size]} rounded-full object-cover`} src={src} />;
   }
 
   return (

@@ -9,11 +9,11 @@ interface StatCardProps {
 }
 
 const toneClass = {
-  indigo: 'bg-indigo-50 text-primary',
-  green: 'bg-emerald-50 text-success',
-  amber: 'bg-amber-50 text-warning',
-  red: 'bg-red-50 text-danger',
-  ink: 'bg-slate-100 text-ink',
+  indigo: 'bg-indigo-50 text-indigo-700',
+  green: 'bg-emerald-50 text-emerald-700',
+  amber: 'bg-amber-50 text-amber-800',
+  red: 'bg-red-50 text-red-700',
+  ink: 'bg-slate-100 text-slate-700',
 };
 
 export function StatCard({ label, value, detail, icon, tone = 'indigo' }: StatCardProps) {

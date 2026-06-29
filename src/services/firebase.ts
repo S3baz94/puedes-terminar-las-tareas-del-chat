@@ -16,17 +16,18 @@ export const hasFirebaseConfig = Boolean(
   firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId,
 );
 
-export const firebaseApp = hasFirebaseConfig
+const firebaseApp = hasFirebaseConfig
   ? getApps()[0] ?? initializeApp(firebaseConfig)
   : null;
 
-export const auth = firebaseApp ? getAuth(firebaseApp) : null;
-export const db = firebaseApp ? getFirestore(firebaseApp) : null;
-export const storage = firebaseApp ? getStorage(firebaseApp) : null;
+const auth = firebaseApp ? getAuth(firebaseApp) : null;
+const db = firebaseApp ? getFirestore(firebaseApp) : null;
+const storage = firebaseApp ? getStorage(firebaseApp) : null;
 
-export async function getFirebaseMessaging() {
+async function getFirebaseMessaging() {
   if (!firebaseApp) return null;
 
   const { getMessaging, isSupported } = await import('firebase/messaging');
   return (await isSupported()) ? getMessaging(firebaseApp) : null;
 }
+

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { CalendarDays, HandHeart, TrendingUp, Users, Wallet } from 'lucide-react';
 import { AdminQuickActions } from '../../components/admin/AdminQuickActions';
 import { Card } from '../../components/common/Card';
@@ -11,6 +12,7 @@ import type { User } from '../../types/models';
 import { formatCurrency, formatDateTime, statusTone } from '../../utils/format';
 
 export function AdminDashboard() {
+  const pendingRegistrationsRef = useRef<HTMLDivElement>(null);
   // Zustand store values and actions
   const users = useAppStore((state) => state.users);
   const donations = useAppStore((state) => state.donations);
@@ -56,7 +58,7 @@ export function AdminDashboard() {
         title="Centro de control"
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           detail="+8% frente al mes anterior"
           icon={<Users className="h-5 w-5" />}
@@ -88,10 +90,14 @@ export function AdminDashboard() {
       </div>
 
       <div className="mt-6">
-        <AdminQuickActions />
+        <AdminQuickActions
+          onScrollToPending={() => {
+            pendingRegistrationsRef.current?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        />
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <Card title="Crecimiento semanal" eyebrow="Asistencia">
           <div className="flex h-64 items-end gap-3">
             {[
@@ -114,13 +120,15 @@ export function AdminDashboard() {
           </div>
         </Card>
 
-        <Card
-          action={<TrendingUp className="h-5 w-5 text-success" />}
-          eyebrow="Aprobaciones"
-          title="Registros pendientes"
-        >
-          <DataTable columns={pendingColumns} data={pendingUsers} getRowKey={(row) => row.uid} />
-        </Card>
+        <div ref={pendingRegistrationsRef}>
+          <Card
+            action={<TrendingUp className="h-5 w-5 text-success" />}
+            eyebrow="Aprobaciones"
+            title="Registros pendientes"
+          >
+            <DataTable columns={pendingColumns} data={pendingUsers} getRowKey={(row) => row.uid} />
+          </Card>
+        </div>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">

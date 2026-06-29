@@ -8,7 +8,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const JWT_SECRET = process.env.JWT_SECRET || 'cd-jwt-secret-key-2026';
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET env variable is required');
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Initialize database schema and seeds
 initializeDatabase();
@@ -182,7 +185,7 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   const { email, password, displayName, city, country } = req.body;
   if (!email || !password || !displayName) {
     return res.status(400).json({ success: false, error: 'Campos requeridos faltantes' });
@@ -194,7 +197,7 @@ app.post('/api/auth/register', (req, res) => {
   }
 
   const uid = 'u-' + Date.now();
-  const passwordHash = bcrypt.hashSync(password, 10);
+  const passwordHash = await bcrypt.hash(password, 10);
   const now = new Date().toISOString();
 
   db.prepare(`

@@ -1,10 +1,10 @@
-import { Bell, LogOut, Menu, ShieldCheck } from 'lucide-react';
+import { useState } from 'react';
+import { Bell, Menu, ShieldCheck, User, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { roleAccent, roleLabels } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useUiStore } from '../../store/uiStore';
-import { Button } from '../common/Button';
 import { UserAvatar } from '../common/UserAvatar';
 
 export function TopBar() {
@@ -12,6 +12,7 @@ export function TopBar() {
   const { user, logout } = useAuth();
   const { unreadCount } = useNotifications();
   const { toggleSidebar } = useUiStore();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   if (!user) return null;
 
@@ -55,25 +56,60 @@ export function TopBar() {
             <ShieldCheck className="h-3.5 w-3.5" />
             {roleLabels[user.role]}
           </span>
-          <div className="hidden items-center gap-3 sm:flex">
-            <UserAvatar name={user.displayName} size="sm" src={user.photoURL} />
-            <div className="max-w-36">
-              <p className="truncate text-sm font-bold text-ink">{user.displayName}</p>
-              <p className="truncate text-xs text-muted">{user.email}</p>
-            </div>
+          <div className="relative">
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-panel hover:bg-slate-50 transition text-left"
+              type="button"
+              title="Menu de usuario"
+            >
+              <UserAvatar name={user.displayName} size="sm" src={user.photoURL} />
+              <div className="hidden max-w-36 text-left sm:block pr-2">
+                <p className="truncate text-sm font-bold text-ink">{user.displayName}</p>
+                <p className="truncate text-xs text-muted">{user.email}</p>
+              </div>
+            </button>
+
+            {isDropdownOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setIsDropdownOpen(false)}
+                />
+                <div className="absolute right-0 mt-2 w-48 rounded-2xl border border-slate-200 bg-white p-2 shadow-app animate-fade-in z-40">
+                  <button
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      const profilePath =
+                        user.role === 'super_admin' || user.role === 'admin'
+                          ? '/admin/perfil'
+                          : user.role === 'leader'
+                          ? '/leader/perfil'
+                          : '/member/perfil';
+                      navigate(profilePath);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-ink hover:bg-slate-50 transition"
+                    type="button"
+                  >
+                    <User className="h-4 w-4" />
+                    <span>Mi Perfil</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      logout();
+                      navigate('/login', { replace: true });
+                    }}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-danger hover:bg-danger/5 transition"
+                    type="button"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Cerrar sesión</span>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
-          <Button
-            icon={<LogOut className="h-4 w-4" />}
-            onClick={() => {
-              logout();
-              navigate('/login', { replace: true });
-            }}
-            size="icon"
-            title="Cerrar sesion"
-            variant="ghost"
-          >
-            Cerrar sesion
-          </Button>
         </div>
       </div>
     </header>

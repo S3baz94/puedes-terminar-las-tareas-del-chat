@@ -24,6 +24,7 @@ import type {
   LiveStream,
   Message,
   AppNotification,
+  Role,
 } from '../types/models';
 
 const getAuthHeaders = () => {
@@ -89,7 +90,7 @@ interface AppState {
   ) => Promise<boolean>;
   suspendUser: (userId: string) => Promise<void>;
   activateUser: (userId: string) => Promise<void>;
-  changeUserRole: (userId: string, role: string) => Promise<void>;
+  changeUserRole: (userId: string, role: Role) => Promise<void>;
   deleteContent: (contentId: string) => Promise<void>;
   updateContentItem: (contentId: string, updates: Partial<Content>) => Promise<void>;
   deleteEvent: (eventId: string) => Promise<void>;
@@ -482,7 +483,7 @@ export const useAppStore = create<AppState>()(
           }
         }
       },
-      async changeUserRole(userId, role) {
+      async changeUserRole(userId: string, role: Role) {
         const res = await apiFetch(`/api/users/${userId}/role`, {
           method: 'PUT',
           body: JSON.stringify({ role }),
@@ -491,11 +492,11 @@ export const useAppStore = create<AppState>()(
           const data = await res.json();
           if (data.success) {
             set((state) => {
-              const updatedUsers = state.users.map((u) => (u.uid === userId ? { ...u, role: role as any } : u));
+              const updatedUsers = state.users.map((u) => (u.uid === userId ? { ...u, role } : u));
               const currentUser = useAuthStore.getState().user;
               if (currentUser && currentUser.uid === userId) {
                 useAuthStore.setState({
-                  user: { ...currentUser, role: role as any }
+                  user: { ...currentUser, role }
                 });
               }
               return { users: updatedUsers };
@@ -605,6 +606,25 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'congregacion-digital-data',
+      partialize: (state) => {
+        const { pastoralNotes, donations, messages, users, ...rest } = state;
+        return rest;
+      },
     },
   ),
 );
+
+import { authStoreRegistry } from './authStore';
+
+authStoreRegistry.onLoginSuccess(async () => {
+  await useAppStore.getState().bootstrap();
+});
+
+authStoreRegistry.onLogout(() => {
+  useAppStore.getState().reset();
+});
+
+authStoreRegistry.onProfileUpdate(async (uid, user) => {
+  await useAppStore.getState().updateUserProfile(uid, user);
+});
+

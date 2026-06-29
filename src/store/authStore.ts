@@ -1,9 +1,22 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User, PrivacySettings } from '../types/models';
-import { useAppStore } from './appStore';
+
 
 type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'error';
+
+type AuthCallback = () => Promise<void> | void;
+type ProfileCallback = (uid: string, user: User) => Promise<void> | void;
+
+let onLoginSuccessCallback: AuthCallback | null = null;
+let onLogoutCallback: AuthCallback | null = null;
+let onProfileUpdateCallback: ProfileCallback | null = null;
+
+export const authStoreRegistry = {
+  onLoginSuccess: (cb: AuthCallback) => { onLoginSuccessCallback = cb; },
+  onLogout: (cb: AuthCallback) => { onLogoutCallback = cb; },
+  onProfileUpdate: (cb: ProfileCallback) => { onProfileUpdateCallback = cb; },
+};
 
 interface AuthState {
   user: User | null;
@@ -45,7 +58,7 @@ export const useAuthStore = create<AuthState>()(
               status: 'authenticated',
               error: null,
             });
-            await useAppStore.getState().bootstrap();
+            if (onLoginSuccessCallback) await onLoginSuccessCallback();
             return true;
           } else {
             set({ status: 'error', error: data.error || 'Credenciales invalidas' });
@@ -58,7 +71,7 @@ export const useAuthStore = create<AuthState>()(
       },
       logout() {
         set({ user: null, token: null, status: 'idle', error: null });
-        useAppStore.getState().reset();
+        if (onLogoutCallback) onLogoutCallback();
       },
       async completeOnboarding(details) {
         const token = useAuthStore.getState().token;
@@ -75,7 +88,7 @@ export const useAuthStore = create<AuthState>()(
           const data = await res.json();
           if (res.ok && data.success) {
             set({ user: data.user });
-            useAppStore.getState().updateUserProfile(data.user.uid, data.user);
+            if (onProfileUpdateCallback) await onProfileUpdateCallback(data.user.uid, data.user);
             return true;
           }
           return false;

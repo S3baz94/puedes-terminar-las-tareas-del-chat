@@ -2,11 +2,15 @@ import { FileText, Plus, Upload, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../common/Button';
 
-export function AdminQuickActions() {
+interface AdminQuickActionsProps {
+  onScrollToPending?: () => void;
+}
+
+export function AdminQuickActions({ onScrollToPending }: AdminQuickActionsProps) {
   const navigate = useNavigate();
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <Button
         icon={<Plus className="h-4 w-4" />}
         variant="primary"
@@ -24,21 +28,14 @@ export function AdminQuickActions() {
       <Button
         icon={<Upload className="h-4 w-4" />}
         variant="outline"
-        onClick={() => navigate('/admin/usuarios')}
+        disabled={true}
       >
-        Importar CSV
+        Importar CSV (Próximamente)
       </Button>
       <Button
         icon={<Users className="h-4 w-4" />}
         variant="secondary"
-        onClick={() => {
-          const cards = document.querySelectorAll('section');
-          cards.forEach((card) => {
-            if (card.textContent?.includes('Registros pendientes')) {
-              card.scrollIntoView({ behavior: 'smooth' });
-            }
-          });
-        }}
+        onClick={onScrollToPending}
       >
         Aprobar usuarios
       </Button>

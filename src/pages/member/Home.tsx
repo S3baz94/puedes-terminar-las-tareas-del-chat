@@ -6,10 +6,19 @@ import { StatusPill } from '../../components/common/StatusPill';
 import { FormationProgress } from '../../components/member/FormationProgress';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { useAppStore } from '../../store/appStore';
+import { useShallow } from 'zustand/react/shallow';
 import { formatDateTime } from '../../utils/format';
 
 export function MemberHome() {
-  const { content, events, groups, liveStream, prayerRequests } = useAppStore();
+  const { content, events, groups, liveStream, prayerRequests } = useAppStore(
+    useShallow((state) => ({
+      content: state.content,
+      events: state.events,
+      groups: state.groups,
+      liveStream: state.liveStream,
+      prayerRequests: state.prayerRequests,
+    }))
+  );
   const devotional = content.find((item) => item.type === 'devotional');
   const primaryGroup = groups[0];
   const nextGroupEvent = primaryGroup
@@ -24,7 +33,7 @@ export function MemberHome() {
         title="Inicio"
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           detail={devotional?.bibleReference ?? 'Lectura diaria'}
           icon={<BookOpen className="h-5 w-5" />}
@@ -55,7 +64,7 @@ export function MemberHome() {
         />
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <Card
           action={<Link className="text-sm font-bold text-primary" to="/member/devocional">Abrir</Link>}
           eyebrow={devotional?.bibleReference}

@@ -1,6 +1,7 @@
 {
   "name": "Congregacion Digital",
   "short_name": "Congregacion",
+  "id": "/",
   "description": "Aplicacion comunitaria para Los Invisibles de Jesus.",
   "start_url": "/",
   "scope": "/",

@@ -1,57 +1,21 @@
-# Project: Congregación Digital Backend Persistence
+# Project: Congregación Digital - Pre-Production Audit Remediation
 
 ## Architecture
-We will implement an Express.js backend using SQLite as the persistent database. SQLite is portable, lightweight, and requires no external process setup.
-The backend will:
-1. Expose REST API endpoints under `/api`.
-2. Implement token-based authentication (JWT) replacing the local credential check.
-3. Keep the frontend (React + Vite) connected to the backend by modifying `authStore` and `appStore` to load and sync data via API requests.
-4. Auto-seed mock data from `src/constants/mockData.ts` if the database is empty.
-5. Provide a single unified command (e.g., in `package.json`) to run both backend and frontend servers in development, or run Express as a server serving the frontend statically in production.
-
-## Code Layout
-- `server/` - Directory for backend code.
-  - `server/index.js` (or `server/server.js`) - Entry point, Express application.
-  - `server/database.js` - SQLite connection, schema initialization, and data seeding.
-  - `server/routes.js` (or inline in index.js) - REST API routes for authentication and CRUD actions.
-- `src/store/` - Updated Zustand stores interfacing with the API.
+The application is a React 18 SPA built with Vite and TypeScript, backed by an Express server with SQLite storage. The state is managed locally via Zustand stores.
+To address the audit findings, we will harden the security settings (JWT, localStorage partialize, Vercel headers), improve performance (code-splitting, Zustand selectors, bcrypt hash deferral), achieve WCAG 2.1 AA accessibility compliance, resolve UX defects, align PWA configuration, and clean up TypeScript/unused files.
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
-|---|------|-------|-------------|--------|
-| 1 | Exploration & Design | Analyze current pages, forms, and states; design SQLite schema & API routes | None | DONE |
-| 2 | Backend Implementation | Create Express server + SQLite database, configure endpoints and seeding | M1 | IN_PROGRESS |
-| 3 | Frontend Store Integration | Update authStore and appStore to invoke the Express backend API endpoints | M2 | PLANNED |
-| 4 | Authentication & Guarding | Secure routes, hook up onboarding/registration, fix state synchronization | M3 | PLANNED |
-| 5 | Compile & Verify | Run typescript type checks, verify build succeeds, test local scenarios | M4 | PLANNED |
-| 6 | Git Push | Commit and push changes to the remote branch main on GitHub | M5 | PLANNED |
+|---|---|---|---|---|
+| 1 | Security & PWA Hardening | Refuse boot on missing JWT secret, partialize Zustand store, add security headers, add manifest id, apple-touch-icon, SW cache version, and vercel rewrites | None | DONE |
+| 2 | Accessibility Compliance | Fix WCAG 2.1 AA contrast for text-muted, badges, buttons; enable keyboard focus for verses and Toggles; link errors via aria-describedby; add tabs roles/labels | M1 | DONE |
+| 3 | Performance Improvements | Implement route-level code splitting, convert store access to selectors (useShallow), defer/seed bcrypt hashing off start path | M2 | DONE |
+| 4 | UX/Design & Component Extraction | Fix grid column breakpoints to 1024px, add /admin/perfil, clickable TopBar avatar dropdown, sidebar opacity, use React refs instead of DOM searches, extract page sub-modules | M3 | DONE |
+| 5 | Code Cleanup & TypeScript Fixes | Remove dead code files/exports/imports, resolve circular dependency, fix 4 stubs with proper UI, resolve all 24 'as any' bypasses, compile check | M4 | DONE |
+| 6 | E2E Testing & Verification | Validate all builds, check typescript type safety, run Forensic Auditor to verify compliance | M5 | DONE |
 
 ## Interface Contracts
-### Auth API
-- `POST /api/auth/login`
-  - Input: `{ email, password }`
-  - Output: `{ success: true, token, user }` or `{ success: false, error: 'Credenciales invalidas' }`
-- `POST /api/auth/onboarding`
-  - Headers: `Authorization: Bearer <token>`
-  - Input: `{ phone, favoriteVerse, testimony, privacySettings }`
-  - Output: `{ success: true, user }`
-
-### App API (CRUD & Actions)
-- `GET /api/bootstrap` (Initial data load)
-  - Headers: `Authorization: Bearer <token>`
-  - Output: all entities: `{ users, groups, content, prayerRequests, events, pastoralNotes, donations, messages, liveStream, notifications, organizationName, themeColor }`
-- `PUT /api/users/:uid` (Update profile)
-- `POST /api/users/:uid/approve` (Approve user)
-- `POST /api/donations` (Add donation)
-- `POST /api/prayer-requests` (Add prayer request)
-- `POST /api/prayer-requests/:id/pray` (Increment prayer count/toggle user)
-- `PUT /api/prayer-requests/:id/pastoral-note` (Update prayer pastoral note)
-- `POST /api/prayer-requests/:id/resolve` (Resolve prayer request)
-- `POST /api/pastoral-notes` (Add pastoral note)
-- `POST /api/content` (Add content)
-- `POST /api/events` (Add event)
-- `POST /api/events/:id/rsvp` (Toggle RSVP)
-- `POST /api/events/:id/attendance` (Toggle attendance)
-- `POST /api/messages` (Add chat message)
-- `PUT /api/livestream` (Update livestream settings)
-- `PUT /api/organization` (Update org name and/or theme color)
+- **Auth Endpoint**: Express JWT token validation.
+- **Zustand stores**:
+  - `authStore`: Handles authentication credentials.
+  - `appStore`: Connects with backend for application database, persistence excludes sensitive collections (donations, users, pastoralNotes, messages).

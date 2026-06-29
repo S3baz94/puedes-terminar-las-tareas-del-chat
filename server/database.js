@@ -275,10 +275,6 @@ export function initializeDatabase() {
       `);
 
       mockUsers.forEach((user) => {
-        const cred = demoCredentials.find((c) => c.email.toLowerCase() === user.email.toLowerCase());
-        const plainPassword = cred ? cred.password : 'Password123!';
-        const passwordHash = bcrypt.hashSync(plainPassword, 10);
-
         insertUser.run(
           user.uid,
           user.email,
@@ -300,7 +296,7 @@ export function initializeDatabase() {
           user.onboardingCompleted ? 1 : 0,
           user.lastActiveAt || new Date().toISOString(),
           user.createdAt || new Date().toISOString(),
-          passwordHash
+          user.passwordHash
         );
       });
 
